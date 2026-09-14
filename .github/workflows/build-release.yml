@@ -1,0 +1,71 @@
+name: Build and test Linux bridge
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, "codex/**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      SOURCE_DATE_EPOCH: "1789171200"
+      LC_ALL: C
+      TZ: UTC
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc g++ glslang-tools
+          python -m pip install meson==1.12.0 ninja==1.13.2
+      - name: Download verified compiler
+        run: |
+          python scripts/fetch-toolchain.py build-toolchain >> "$GITHUB_PATH"
+      - name: Build original bridge and patched D3D12
+        run: bash scripts/build-components.sh
+      - name: Run native synchronization tests
+        run: |
+          gcc -std=gnu11 -O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer -pthread tests/native_contract.c -ldl -o build/native-contract
+          ASAN_OPTIONS=detect_leaks=0 ./build/native-contract
+      - name: Replay v0.3.0 command recording protocol
+        run: |
+          gcc -std=gnu11 -O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer -I build/vkd3d-source/libs/vkd3d tests/vkd3d_ordered_contract.c -o build/vkd3d-contract
+          ASAN_OPTIONS=detect_leaks=0 ./build/vkd3d-contract
+      - name: Fetch official validation fixture
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import urllib.request
+          from dlssnr import upstream
+          with urllib.request.urlopen(upstream.SETUP_URL, timeout=60) as response:
+              data = response.read(upstream.SETUP_BYTES + 1)
+          upstream.inspect_setup(data)
+          Path('build/upstream-setup.exe').write_bytes(data)
+          PY
+      - name: Check installation, rollback, staging and archive
+        env:
+          DLSSNR_TEST_SETUP: build/upstream-setup.exe
+          DLSSNR_TEST_VKD3D_SOURCE: build/vkd3d-source
+        run: |
+          python -m unittest discover -s tests -v
+          python -m compileall -q dlssnr installer.py stage_upstream.py
+          git diff --exit-code
+      - name: Upload experimental package
+        uses: actions/upload-artifact@v4
+        with:
+          name: dlssnr-linux-portable
+          path: |
+            dist/dlssnr-linux-portable.tar.gz
+            dist/dlssnr-linux-portable.tar.gz.sha256
+          if-no-files-found: error

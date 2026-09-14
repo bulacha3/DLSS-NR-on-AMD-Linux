@@ -1,0 +1,10 @@
+Licensing scope
+
+This repository contains components with different origins. See THIRD-PARTY.md
+and the accompanying licenses directory for their corresponding notices.
+
+licenses/PROJECT-MIT.txt covers newly authored standalone integration helpers,
+build scripts and tests. It does not relicense the recovered guentra code,
+vkd3d-proton or external upstream/NVIDIA/AMD software.
+
+No repository-wide license grant is asserted for third-party material.

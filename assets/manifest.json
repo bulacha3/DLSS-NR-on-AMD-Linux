@@ -1,0 +1,22 @@
+{
+  "version": "0.3.0-linux-experimental.3-diagnostic.4",
+  "mod_version": "0.3.0",
+  "files": {},
+  "files_note": "Filled by build_release.py from validated build outputs; source checkouts contain no binaries.",
+  "external_files": {
+    "dlssnr_on_amd_setup.exe": "26bb910cfe5dba85cb5e0fd050eaa6f79a73f0068026082afd4cf2c98cdd54dd"
+  },
+  "targets": [
+    "gfx1100",
+    "gfx1101",
+    "gfx1102",
+    "gfx1200",
+    "gfx1201"
+  ],
+  "minimum_glibc": "2.34",
+  "hip_bridge_abi": 2,
+  "ordered_abi": 3,
+  "flag_shader_hash": "135ea1f88cbc832d",
+  "runtime_status": "diagnostic.4 opt-in swapchain queue fallback CPU-validated; 007 gameplay pending; Cyberpunk neural processing validated on diagnostic.3",
+  "distribution": "Bridge binaries and corresponding source; upstream runtime downloaded and staged only on the user machine"
+}

@@ -1,0 +1,186 @@
+{
+  "schema": 3,
+  "generated_utc": "2026-09-14",
+  "status": "Experimental: gameplay reported and neural processing corroborated for Cyberpunk 2077, 007 First Light and Atomic Heart on a limited AMD RDNA4 / Proton configuration; other setups unverified.",
+  "linux_source": {
+    "repository": "https://github.com/guentra/DLSS-NR-on-AMD-Linux",
+    "release": "experimental",
+    "archive_sha256": "57b0b33caa79598ed33f23a6a7003f926059512ef48cd258fe8232781bef2d59",
+    "source_origin": "native/ and sources/ recovered from the authenticated archive"
+  },
+  "upstream_mod": {
+    "repository": "https://github.com/danielblnc/DLSS-NR-on-AMD",
+    "tag": "v0.3.0",
+    "setup_sha256": "26bb910cfe5dba85cb5e0fd050eaa6f79a73f0068026082afd4cf2c98cdd54dd",
+    "setup_bytes": 7585035,
+    "payload_sha256": "8321cae728d28cb7632d0d58d3d913e91132bf7645c126505698fbe4cd5a0138",
+    "payload_modified": false,
+    "distributed": false
+  },
+  "vkd3d": {
+    "repository": "https://github.com/HansKristian-Work/vkd3d-proton.git",
+    "commit": "35bdee1435c94f8c3548725fcb046595b263bd7e",
+    "patch": "sources/vkd3d-proton-ordered.patch",
+    "patch_sha256": "f93b72faf4bfb3330016d0d2bfc9448aff683aaa6342ece2cca6f74cb24a45d0",
+    "submodules": "sources/vkd3d-submodules.json"
+  },
+  "toolchain": {
+    "release": "mstorsjo/llvm-mingw 20260826 UCRT",
+    "archive_sha256": "cee8d2ce3da5145ce4dc882e70d0b0719a783d53a99752c60948fc0659975a65",
+    "native_compiler_tested": "GCC 13.3.0",
+    "meson": "1.12.0",
+    "ninja": "1.13.2",
+    "glslang_tested": "12.0.0",
+    "source_date_epoch": 1789171200
+  },
+  "integration": {
+    "hip_exports": 33,
+    "hip_bridge_magic": "DLNRHIP2",
+    "ordered_abi": 3,
+    "flag_shader_offset": 427152,
+    "flag_shader_bytes": 1472,
+    "flag_shader_sha256": "0b85aab8db0ee8ba14019e32e3839bb2d321cde974371b30eb3742955b53084b",
+    "vkd3d_shader_fnv1": "135ea1f88cbc832d",
+    "root_parameters": [
+      "UAV flags",
+      "4 constants",
+      "UAV abortw"
+    ],
+    "static_root_binding_evidence": "Official payload Win64 instructions at 0x180018593 through 0x18001861d bind root 0 and root 2 UAVs and root 1 constants. RDEF names/offsets independently inspected.",
+    "synchronization": "Execute original mode-0 producer and mode-2 final status shader; replace repeated matching mode-1 waits with one ordered handoff; execute original HIP completion marker and synchronize its stream before publishing completion.",
+    "async_supported": false,
+    "startup_probes": {
+      "scope": "Exact v0.3.0 bounded flag-kernel probes on the null stream, grid 1x1x1 and block 32x1x1",
+      "operations": [
+        "wait(flags, 0, 1)",
+        "set(flags, 0, NULL)",
+        "wait(flags, 0x40000000, 1500000)"
+      ],
+      "payload_evidence": "Pinned unmodified v0.3.0 payload RVAs 0x14e28..0x14ed6 and 0x14f70..0x15079; wrappers at 0x4fd0 and 0x50d0; flags are suballocated at 0x13b8f..0x13b9d",
+      "behavior": "Forward original bounded kernels and synchronize their original stream; no synthetic flag stores or neural completion. Preserve resource pins when synchronization fails.",
+      "gpu_validation": "Original bounded startup probes completed during gameplay diagnostics; full neural processing was subsequently validated after the recording correction."
+    },
+    "recording_protocol": {
+      "producer": 0,
+      "wait_slices": 1,
+      "final_status": 2,
+      "payload_evidence": "Pinned unmodified payload RVAs 0x16b0c..0x16b62, 0x16c36..0x16cf0, 0x16e71..0x16ec1. Pinned DXBC mode-2 branch checks completion and writes status/counters.",
+      "previous_defects": [
+        "Second mode-1 wait rejected because the first split cleared nr_armed_token",
+        "Mode 2 unconditionally rejected by mode > 1 validation"
+      ],
+      "correction": "Repeated waits must match token, frame, exact flags/abort addresses and spin cap; one split per frame; original mode-2 status dispatch retained in the consumer suffix.",
+      "baseline_reproduction": "Actual old nr_ordered_commands.h rejects wait slice 2/16 and also rejects the finalizer after a single wait; DXGI_ERROR_INVALID_CALL 0x887a0001.",
+      "cpu_validation": "Actual new nr_ordered_commands.h passes single-wait and 4000-slice replays, malformed-sequence rejection and timeout/output-error handoff tests under ASan/UBSan.",
+      "gpu_validation": "Passed in the diagnostic.3 Cyberpunk session: prefix completion, input publication, HIP completion and consumer handoff."
+    },
+    "swapchain_queue_fallback": {
+      "option": "DLSSNR_SWAPCHAIN_QUEUE=1",
+      "default": "disabled",
+      "scope": "GetDevice(IID_ID3D12CommandQueue) on the vkd3d DXGI presenter; return only its owned queue with normal COM AddRef semantics",
+      "payload_evidence": "Unchanged v0.3.0 RVAs 0x9920 (IUnknown-to-queue recording), 0x9b79..0x9c49 (lookup and GetDevice fallback), 0x9c4b..0x9cb7 (missing-queue/device checks)",
+      "cpu_validation": "Actual pinned and patched function bodies tested with COM mocks under ASan/UBSan; missing queue reproduced before fix; exact owned queue identity, references and failure propagation pass after fix",
+      "gpu_validation": "Passed in diagnostic.4 007 First Light and Atomic Heart gameplay with their documented OptiScaler profiles.",
+      "record": "docs/games/007-first-light.md"
+    },
+    "optiscaler_ffx_input_workaround": {
+      "option": "Inputs.EnableFfxInputs=false",
+      "scope": "OptiScaler 0.9.4-final (7534ad0), DLSS input to FSR 3.1 backend in 007 First Light and Atomic Heart; per-game DXGI spoofing settings differ",
+      "mechanism": "Avoid OptiScaler FFX input detours and saved original dispatch trampolines that can bypass later NR interception; preserve DLSS input and the FSR 3.1 backend",
+      "validation": "The documented DLSS-input route restored NR interception in 007; Atomic Heart subsequently completed neural processing without another runtime change.",
+      "global_default": false,
+      "binary_change_required": false,
+      "record": "docs/games/007-first-light.md"
+    }
+  },
+  "validation": {
+    "upstream_digest_and_shader_contract": "passed",
+    "native_bridge_and_pe_compile": "passed",
+    "cpu_forwarding_and_sync_contracts_asan_ubsan": "passed, including startup probes in a suballocated flag buffer, no synthetic frame readiness, normal job completion, and failed-sync pin retention",
+    "installer_roundtrip_update_rollback": "passed",
+    "full_vkd3d_compile": "passed",
+    "archive_and_real_staging": "passed",
+    "wine_weight_conversion": "not_run",
+    "image_quality_and_performance": "No controlled benchmark or image comparison. Session-specific performance measurements are omitted. Long-session stability remains unverified.",
+    "fsr_confirmation_and_readonly_diagnostics": "passed",
+    "python_integration_tests_passed": 21,
+    "runner_reselection_and_system_discovery": "passed with CPU fixtures",
+    "diagnostic_build": "Diagnostic.4 full D3D12 compile and 21 Python tests previously passed; subsequent 007 and Atomic Heart gameplay confirmed neural processing. This source snapshot changes documentation and packaging inputs only.",
+    "recording_protocol_regression": "passed: before/after replay, 1 and 4000 waits, preserved mode-2 dispatch, mismatched/unpaired rejection, Vulkan timeout cannot publish, HIP failure cannot report success",
+    "gameplay_record": "docs/games/cyberpunk-2077.md",
+    "swapchain_queue_regression": "passed; actual before/after source under ASan/UBSan",
+    "gameplay_records": [
+      "docs/games/cyberpunk-2077.md",
+      "docs/games/007-first-light.md",
+      "docs/games/atomic-heart.md"
+    ],
+    "gameplay_validated_games": [
+      "Cyberpunk 2077",
+      "007 First Light",
+      "Atomic Heart"
+    ],
+    "documentation_update_checks": "Source digest consistency, local Markdown links, launch-template equivalence, package contents and privacy checks are verified when preparing the source snapshot; no new GPU test.",
+    "AMD_Proton_gameplay": "Passed on a limited AMD RDNA4 configuration: diagnostic.3 Cyberpunk; diagnostic.4 007 First Light and Atomic Heart."
+  },
+  "distribution": {
+    "contains": [
+      "installer",
+      "corresponding bridge/patch source",
+      "rebuilt bridge/trampoline/vkd3d components",
+      "notices"
+    ],
+    "excludes": [
+      "official setup",
+      "upstream runtime",
+      "NVIDIA DLL",
+      "weights",
+      "ROCm runtime"
+    ],
+    "reproducibility": "Deterministic packaging of identical inputs; no cross-toolchain binary identity claim."
+  },
+  "source_hashes": {
+    ".github/workflows/build-release.yml": "676f95df0ccfd634015f9dc9f5add14b6acba19de0fd1078a87a6b33ee8794f5",
+    ".gitignore": "821c195bbf08064619d929c303ed9668edd084c4d0fba4a4b7d12001495b8189",
+    "README.md": "2fafd87598d69004695a60de4a0b0361cb51f3cd1a2c81ae2471aa7047798f80",
+    "THIRD-PARTY.md": "70bc9c0d692431ab0e1f12c29260f22bd88bbcdf16b39482b6b854d7947f02a1",
+    "build_release.py": "b558c5fabbdde9ad540abda4a80db2f4ce3887bf996657e81141a2aebd4b7f79",
+    "dlssnr/deploy.py": "6f06d50ced9061711a27b9c76bc4fc60e26009ac034ad1907682b04fa353903c",
+    "docs/INSTALL.md": "218df9851699c3363c4714992da68b7860feaa4c3f42c69ff460c923b7280b5a",
+    "docs/PRIVACY.md": "cbfe4bcecb8f2264c4bd0624aa2d2447edd8536ea531a349778dc4e203feb555",
+    "docs/TROUBLESHOOTING.md": "751d79b9dd1277c7e3334fb4b03eac01466e2f89554a6c1a662f57093491365b",
+    "docs/games/007-first-light.md": "d46001a694a05a39e818a4a23a5e13336428218c50fe4d1ee2f39059218c0b4b",
+    "docs/games/atomic-heart.md": "136e67e358e7a95dd824a70b1719ac285df0f35e238baf5726fb6d047b713c39",
+    "docs/games/cyberpunk-2077.md": "0a1bd5cd0f779ccd1fe2fe64e4e3ac38ae5c01ec3624a9ab0b42c91dba119a17",
+    "native/hip_bridge.c": "730e86d91f722022590dae6a00e78ada323fcaf1247c035b35da5abff96c0983",
+    "native/hip_bridge.h": "1282555fe402da8c6ff0205da32a7d25a7ffe42f8e6bd1a6533e2c6fdd4b359a",
+    "native/hip_probe.c": "8aaeba487b93f3e56e653bdf8615f04022e655e3d074423b07797d43eba5c63e",
+    "native/hip_probe_kernel32.def": "93603eeea79eae5bc6ee8fd79912ca0146ddd3865d27bf148ef9f75c391fe892",
+    "native/nr_ordered.c": "2851ca083f7f9b7e8c5561855472c42df8eeead417a4e22c67a8dedab292dd7f",
+    "native/nr_ordered.h": "0740adedd030bfb97e3146a4060b0ba9aeb163389f0590edfb923e0ca515437d",
+    "sources/README.md": "25386fdface55eedd877f7d08a481c79cf9180530c9bcf9743a2e23f5b90507b",
+    "sources/cross-win64.ini": "5a1c6f19cea810e48c37fe5dc6b82850a166ac79877914c7cb845ce22730aa94",
+    "sources/fetch_vkd3d.py": "e4dd8bf7a8712e2a6fd08853093be8bf7a83dfb6417b96bce4791cba27819c7a",
+    "sources/trampoline/amdhip64_7_pe.c": "1fef657500378fa326f4f4cb02aaddcc8cbf7d19c5ce4069892bc6409e2a5224",
+    "sources/trampoline/hip_bridge.h": "1282555fe402da8c6ff0205da32a7d25a7ffe42f8e6bd1a6533e2c6fdd4b359a",
+    "sources/trampoline/kernel32.def": "7b8fb39c7c1847a8a68c030f1e47074e671c7204059654dc4f8e30b4de74e3da",
+    "sources/trampoline/ntdll.def": "4347c80c0ead0e117bc0b6651d14dcc34cac5304028e8a2b9f634d724523ac5f",
+    "sources/vkd3d-proton-ordered.patch": "f93b72faf4bfb3330016d0d2bfc9448aff683aaa6342ece2cca6f74cb24a45d0",
+    "sources/vkd3d-submodules.json": "bf2e242a72f71c4562e894af8cf9db2be2302a498e2d542bf0b433181a2f7325",
+    "tests/native_contract.c": "ba7f6c12207b0707207afbd1aea72e8ff24c5db17d61f8b4b92844737d93dbb5",
+    "tests/swapchain_queue_contract.c": "42ab3030cc38c6123f7df47b49c420bf648df355ee670fab2de33ce4f8589949",
+    "tests/test_swapchain_queue.py": "fba2fe1ea81417fd8caad3b4efbc22fcc40c9f28911a3c750e0f4fda76dcabdb",
+    "tests/vkd3d_ordered_contract.c": "a1ad5130dbdb7c4e56511fee538917716fcc1014b4e868e728de442a553ddef7"
+  },
+  "component_hashes_local": {
+    "d3d12.dll": "d4b1508bba7171eb3deb777083b2db0e2125693146e9ec336e00bc89273ba9b3",
+    "d3d12core.dll": "7fe4aea66167a10f9e9b408867d91808f647a07344b30c7780ca7af44ecb7b55",
+    "amdhip64_7.dll": "6300ab93a92e0e711b43a262e3858be90980dc396ca67d5edc39c45516ab2e62",
+    "libdlssnr_hip_bridge.so": "10f48852f68c08c58bd1f4d873c5ccecb82da705e829b40ba13c55230a63fc5f"
+  },
+  "installer_version": "0.3.0-linux-experimental.3-diagnostic.4",
+  "privacy": {
+    "gameplay_logs_included": false,
+    "source_log_fingerprints_included": false,
+    "report_detail": "Public profiles retain software configuration and bounded compatibility findings; personal paths, exact device inventory, session timestamps and session-specific measurements are omitted."
+  }
+}

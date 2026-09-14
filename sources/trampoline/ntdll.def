@@ -1,0 +1,3 @@
+LIBRARY ntdll.dll
+EXPORTS
+__wine_get_unix_env
