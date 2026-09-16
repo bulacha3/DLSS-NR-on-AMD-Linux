@@ -14,7 +14,7 @@ from dlssnr.upstream import COMPONENTS, HIP_IMPORTS
 ARCHIVE_ROOT = 'dlssnr-linux-portable'
 PACKAGE_FILES = (
     'installer.py', 'install.sh', 'stage_upstream.py', 'build_release.py',
-    'README.md', 'THIRD-PARTY.md', 'PROVENANCE.json', 'LICENSE',
+    'README.md', 'CHANGELOG.md', 'THIRD-PARTY.md', 'PROVENANCE.json', 'LICENSE',
     'docs/INSTALL.md', 'docs/TROUBLESHOOTING.md', 'docs/PRIVACY.md',
     'docs/games/cyberpunk-2077.md',
     'docs/games/007-first-light.md',
@@ -24,6 +24,7 @@ PACKAGE_FILES = (
     'native/hip_bridge.c', 'native/hip_bridge.h', 'native/nr_ordered.c', 'native/nr_ordered.h',
     'tests/native_contract.c', 'tests/vkd3d_ordered_contract.c',
     'tests/swapchain_queue_contract.c', 'tests/test_swapchain_queue.py',
+    'tests/upstream_recording_contract.c', 'tests/test_upstream_031.py',
     'sources/README.md', 'sources/fetch_vkd3d.py', 'sources/cross-win64.ini',
     'sources/vkd3d-submodules.json', 'sources/vkd3d-proton-ordered.patch',
     'sources/trampoline/amdhip64_7_pe.c', 'sources/trampoline/hip_bridge.h',
@@ -60,6 +61,8 @@ def validate_components(root):
         raise ValueError('Missing x86_64 ordered HIP bridge')
     if b'NR: cannot establish producer/consumer boundary' not in content['d3d12core.dll']:
         raise ValueError('D3D12 core lacks the ordered integration patch')
+    if b'method=%s' not in content['d3d12core.dll']:
+        raise ValueError('D3D12 core lacks the compute/graphics wait integration')
     return content
 
 

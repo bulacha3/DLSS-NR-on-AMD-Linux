@@ -1,6 +1,6 @@
 # Cyberpunk 2077
 
-**Gameplay validated:** diagnostic.3, upstream NR 0.3.0 and native FSR 4.1.1, through Proton on an AMD RDNA4 configuration. Other configurations remain unverified.
+**Gameplay validated:** upstream NR 0.3.1 and native FSR 4.1.1, through Proton on an AMD RDNA4 configuration. Other configurations remain unverified.
 
 ## Setup
 
@@ -12,6 +12,8 @@
 OptiScaler was not required for this native-FSR route. Do not copy the other games' OptiScaler profiles solely because they worked there.
 
 ## Validation
+
+Both compute (the default) and the optional graphics wait route completed neural processing in bounded sessions. No controlled FPS improvement was established for graphics.
 
 Gameplay analysis confirmed completed ordered neural jobs, positive GPU network time and no reported capture timeout in the successful session. Processing continued across render-size and staging changes.
 

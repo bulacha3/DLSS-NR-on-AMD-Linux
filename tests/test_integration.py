@@ -54,7 +54,7 @@ class IntegrationTests(unittest.TestCase):
                     content = (name + revision).encode()
                     (package / 'assets' / name).write_bytes(content)
                     hashes[name] = hashlib.sha256(content).hexdigest()
-                (package / 'assets/manifest.json').write_text(json.dumps({'files': hashes}))
+                (package / 'assets/manifest.json').write_text(json.dumps({'files': hashes, 'graphics_wait_supported': True}))
             component_set('one')
             runtime = {'library': str(library)}
             gpu = {'index': 0, 'name': 'test AMD'}
@@ -65,6 +65,8 @@ class IntegrationTests(unittest.TestCase):
                 self.assertTrue(result['valid'])
                 self.assertIn(upstream.FLAG_SHADER_HASH, (game / deploy.STORE / 'launch.sh').read_text())
                 ini = game / deploy.INI
+                self.assertEqual(result['wait_method'], 'compute')
+                self.assertIn('SpinDraw=0', ini.read_text())
                 ini.write_text(ini.read_text().replace('PreUpscale=1', 'PreUpscale=0'))
                 component_set('two')
                 copy = deploy._atomic_copy
@@ -84,6 +86,48 @@ class IntegrationTests(unittest.TestCase):
                     acknowledge_risk=True)
                 self.assertTrue(result['valid'])
                 self.assertIn('PreUpscale=0', ini.read_text())
+                # An older INI without a method gets compute automatically.
+                ini.write_text(ini.read_text().replace('SpinDraw=0\n', ''))
+                result = deploy.install_game(exe, package, runtime, gpu, runner, weights,
+                    acknowledge_risk=True)
+                self.assertTrue(result['updated'])
+                self.assertEqual(result['wait_method'], 'compute')
+                # An explicit fallback must survive an ordinary package update.
+                deploy.install_game(exe, package, runtime, gpu, runner, weights,
+                    acknowledge_risk=True, wait_method='compute')
+                component_set('three')
+                result = deploy.install_game(exe, package, runtime, gpu, runner, weights,
+                    acknowledge_risk=True)
+                self.assertTrue(result['updated'])
+                self.assertEqual(result['wait_method'], 'compute')
+                self.assertIn('SpinDraw=0', ini.read_text())
+                result = deploy.install_game(exe, package, runtime, gpu, runner, weights,
+                    acknowledge_risk=True, wait_method='graphics')
+                self.assertTrue(result['updated'])
+                self.assertIn('SpinDraw=1', ini.read_text())
+                self.assertIn('CpuWait=0', ini.read_text())
+                self.assertIn('PreUpscale=0', ini.read_text())
+                # A new default must not silently reset an existing opt-in.
+                result = deploy.install_game(exe, package, runtime, gpu, runner, weights,
+                    acknowledge_risk=True)
+                self.assertTrue(result['idempotent'])
+                self.assertEqual(result['wait_method'], 'graphics')
+                self.assertIn('SpinDraw=1', ini.read_text())
+                # Reselecting a method must repair a manually edited sync key,
+                # even when the component/request digest itself is unchanged.
+                ini.write_text(ini.read_text().replace('SpinDraw=1', 'SpinDraw=0'))
+                result = deploy.install_game(exe, package, runtime, gpu, runner, weights,
+                    acknowledge_risk=True, wait_method='graphics')
+                self.assertTrue(result['updated'])
+                self.assertIn('SpinDraw=1', ini.read_text())
+                deploy.install_game(exe, package, runtime, gpu, runner, weights,
+                    acknowledge_risk=True, wait_method='compute')
+                self.assertIn('SpinDraw=0', ini.read_text())
+                self.assertIn('PreUpscale=0', ini.read_text())
+                result = deploy.install_game(exe, package, runtime, gpu, runner, weights,
+                    acknowledge_risk=True)
+                self.assertTrue(result['idempotent'])
+                self.assertEqual(result['wait_method'], 'compute')
                 deploy.uninstall_game(exe)
                 self.assertEqual((game / 'version.dll').read_bytes(), original)
                 self.assertFalse((game / 'd3d12.dll').exists())

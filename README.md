@@ -1,66 +1,64 @@
 # DLSS-NR on AMD for Linux
 
-Run **DLSS 5 Neural Rendering** on supported AMD GPUs in DirectX 12 games through Wine/Proton.
+Experimental **DLSS 5 Neural Rendering** on supported AMD GPUs in DirectX 12 games through Wine/Proton.
 
-An experimental Linux integration of [danielblnc's DLSS-NR on AMD 0.3.0](https://github.com/danielblnc/DLSS-NR-on-AMD), based on [guentra's Linux port](https://github.com/guentra/DLSS-NR-on-AMD-Linux).
+Based on [danielblnc's DLSS-NR on AMD](https://github.com/danielblnc/DLSS-NR-on-AMD) and [guentra's Linux port](https://github.com/guentra/DLSS-NR-on-AMD-Linux).
 
-**Experimental · Upstream 0.3.0 · Linux package diagnostic.4**
+**Upstream 0.3.1 · Linux 0.3.1-linux.1 · Experimental**
 
 ## Download
 
-Check [Releases](https://github.com/bulacha3/DLSS-NR-on-AMD-Linux/releases) for published packages. If no release is listed, open a successful [build](https://github.com/bulacha3/DLSS-NR-on-AMD-Linux/actions/workflows/build-release.yml) and download the **dlssnr-linux-portable** artifact. GitHub requires sign-in to download Actions artifacts.
+**[Download 0.3.1 Linux](https://github.com/bulacha3/DLSS-NR-on-AMD-Linux/releases/tag/v0.3.1-linux.1)** — get `dlssnr-linux-portable.tar.gz` and its `.sha256` file from **Assets**.
 
-Use the portable package to install. GitHub's **Source code** archives require [building the Linux components](sources/README.md) first.
+[What's changed](CHANGELOG.md) · [All releases](https://github.com/bulacha3/DLSS-NR-on-AMD-Linux/releases)
 
 ## Install
 
-1. Extract the artifact ZIP, then verify and unpack the portable archive:
+The game must already work in **DirectX 12 through Proton**. Close it, then:
 
-   ```sh
-   sha256sum -c dlssnr-linux-portable.tar.gz.sha256
-   tar -xzf dlssnr-linux-portable.tar.gz
-   cd dlssnr-linux-portable
-   ./install.sh
-   ```
+```sh
+sha256sum -c dlssnr-linux-portable.tar.gz.sha256
+tar -xzf dlssnr-linux-portable.tar.gz
+cd dlssnr-linux-portable
+./install.sh
+```
 
-2. Select the game's **actual executable** and the **same Wine/Proton runner** used by your launcher. Type `steam` to list compatible installed runners.
-3. Supply your own **`nvngx_dlssnr.dll` version 310.8.0.0**, or already converted weights. The installer checks HIP and offers a local runtime download when needed.
-4. Copy the launch options printed by the installer into Steam. Apply the game profile below when OptiScaler is required.
-5. Enable the profile's upscaler in the game. Press **End** to open DLSS-NR; **Insert** opens OptiScaler when used.
+1. Select the actual game executable and the **same Proton runner** used by your launcher. Type `steam` to list installed runners.
+2. Supply your own **`nvngx_dlssnr.dll` 310.8.0.0**, or converted weights. The installer checks HIP and offers a local runtime download if needed.
+3. Paste the printed launch options into Steam. Apply the game profile below if OptiScaler is needed.
+4. Enable the profile's upscaler in the game. **End** opens DLSS-NR; **Insert** opens OptiScaler.
 
-The game must already work in **DirectX 12 through Proton**. Install separately for each game. [Full installation guide →](docs/INSTALL.md)
+**Compute synchronization is automatic on new installs. No `--wait-method` argument is required.** Install separately for each game. [Full guide →](docs/INSTALL.md)
 
 ## Tested games
 
-| Game | Working route | Guide |
+| Game | Tested route with upstream 0.3.1 | Guide |
 | --- | --- | --- |
-| Cyberpunk 2077 | Native FSR 4.1.1 | [Setup and status](docs/games/cyberpunk-2077.md) |
-| 007 First Light | DLSS input → OptiScaler FSR 3.1 | [Setup and status](docs/games/007-first-light.md) |
-| Atomic Heart | DLSS input → OptiScaler FSR 3.1 | [Setup and status](docs/games/atomic-heart.md) |
+| Cyberpunk 2077 | Native FSR 4.1.1 | [Setup](docs/games/cyberpunk-2077.md) |
+| 007 First Light 1.2.0 | DLSS input → OptiScaler → FSR 4.1.1; compute waits | [Setup](docs/games/007-first-light.md) |
+| Atomic Heart | DLSS input → OptiScaler → FSR 3.1.4 | [Setup](docs/games/atomic-heart.md) |
 
-Gameplay reports and diagnostics confirm neural processing on a limited **AMD RDNA4 / Proton-CachyOS-SLR** configuration. Cyberpunk was validated with diagnostic.3; 007 and Atomic Heart with diagnostic.4. These results do not establish support for every GPU, Proton version or game.
+Bounded gameplay tests confirmed neural processing on an **AMD RDNA4 / Proton-CachyOS-SLR** configuration. Other GPUs, runners and games remain unverified.
 
-## Requirements and limits
+## Requirements and known limits
 
-- A compatible AMD GPU and HIP 7 runtime. Upstream targets Radeon RX 7000 and RX 9000; Linux validation is narrower.
-- An interceptable **FSR 3 / FSR 4** path. Supported DLSS, FSR 2 or XeSS inputs may work through OptiScaler. **FSR 1 alone is insufficient** for this path.
-- **Pre-upscaling is enabled by default.** Linux installation enforces synchronous processing (`Async=0`). Upstream Windows FPS figures are not Linux benchmarks.
-- The original upstream runtime is used unchanged. The NVIDIA DLL, converted weights, original installer and ROCm runtime are **not bundled**.
-- Compatibility, visual quality and long-session stability vary. This integration does not add path tracing or provide an anti-cheat bypass.
+- Linux x86_64, Python 3.10+, a compatible AMD GPU and HIP 7. Upstream targets RX 7000/9000; Linux validation is narrower.
+- An interceptable **FSR 3 / FSR 4** path, native or through OptiScaler. **FSR 1 alone is insufficient.**
+- **Graphics waits can crash 007 at startup.** Compute is the default; updates preserve a saved choice. [Switch an older installation](docs/TROUBLESHOOTING.md#007-crashes-immediately-with-graphics-waits).
+- Pre-upscaling is enabled by default. Linux enforces `Async=0` and `CpuWait=0`. There is no guaranteed FPS improvement or Windows performance parity.
+- NVIDIA files, weights, the original upstream installer/runtime and ROCm are **not bundled**. The upstream runtime is downloaded, verified and used unchanged.
+- Long-session stability and the upstream memory-leak fix have not been independently validated. This integration does not add path tracing or bypass anti-cheat.
 
 ## Update or remove
 
-Close the game, extract the new package and run `./install.sh` again for that game. Existing visual settings and original-file backups are retained.
+Close the game and rerun `./install.sh` from the new package. Visual settings, the saved wait method and original-file backups are retained.
 
-To remove it, run `./install.sh uninstall` and remove this integration's launch options from the launcher.
+To remove it, run `./install.sh uninstall` and remove its launch options.
 
-[Troubleshooting](docs/TROUBLESHOOTING.md) · [Sharing diagnostics safely](docs/PRIVACY.md) · [Build from source](sources/README.md)
+[Troubleshooting](docs/TROUBLESHOOTING.md) · [Sharing logs safely](docs/PRIVACY.md) · [Build from source](sources/README.md)
 
 ## Credits
 
-- [danielblnc](https://github.com/danielblnc/DLSS-NR-on-AMD) — DLSS-NR on AMD.
-- [guentra](https://github.com/guentra/DLSS-NR-on-AMD-Linux) — original Linux integration.
-- [vkd3d-proton](https://github.com/HansKristian-Work/vkd3d-proton), [OptiScaler](https://github.com/optiscaler/OptiScaler) and their contributors.
-- Linux integration maintenance: **bulacha3**.
+[danielblnc](https://github.com/danielblnc/DLSS-NR-on-AMD) · [guentra](https://github.com/guentra/DLSS-NR-on-AMD-Linux) · [vkd3d-proton](https://github.com/HansKristian-Work/vkd3d-proton) · [OptiScaler](https://github.com/optiscaler/OptiScaler) and their contributors. Linux maintenance: **bulacha3**.
 
-Independent community project, not affiliated with NVIDIA or AMD. See [source origins and licenses](THIRD-PARTY.md).
+Independent community project, not affiliated with NVIDIA or AMD. [Source origins and licenses](THIRD-PARTY.md).

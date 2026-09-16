@@ -1,6 +1,6 @@
 # Atomic Heart
 
-**Gameplay validated:** diagnostic.4, upstream NR 0.3.0, OptiScaler 0.9.4-final (`7534ad0`) and an AMD RDNA4 / Proton-CachyOS-SLR configuration.
+**Gameplay validated:** upstream NR 0.3.1, OptiScaler 0.9.4-final (`7534ad0`) and an AMD RDNA4 / Proton-CachyOS-SLR configuration.
 
 ## Setup
 
@@ -23,6 +23,8 @@ Atomic Heart uses **`Spoofing.Dxgi=true`**; the tested 007 profile uses false. T
 Both profiles retain `DLSSNR_SWAPCHAIN_QUEUE=1`, `Inputs.EnableFfxInputs=false` and `Menu.OverlayMenu=true`. The FFX-input setting is specific to this DLSS-input route.
 
 ## Validation
+
+Compute (the default) and the optional graphics wait route both completed neural processing in bounded sessions. Frame generation remained disabled.
 
 Gameplay analysis confirmed FSR 3.1.4 interception, completed ordered neural jobs, positive GPU network time and no reported capture timeout. Processing continued across render-size and staging changes. No additional bridge or runtime correction was required after the 007 fixes.
 

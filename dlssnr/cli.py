@@ -53,7 +53,9 @@ def parser():
                                  help='Allow installation without static evidence of mod loading; activation remains unverified')
             command.add_argument('--confirm-fsr', action='store_true',
                                  help='Confirm the game offers FSR 3 or FSR 4 when file inspection cannot detect it')
-            command.add_argument('--setup', type=Path, help='Official v0.3.0 setup; otherwise downloaded and verified for installation')
+            command.add_argument('--setup', type=Path, help='Official v0.3.1 setup; otherwise downloaded and verified for installation')
+            command.add_argument('--wait-method', choices=('compute', 'graphics'),
+                                 help='Advanced override: default compute on new installs; updates keep the saved choice; graphics has a known 007 startup failure')
             command.add_argument('--dry-run', action='store_true', help='No writes, downloads or conversion')
     command = commands.add_parser('runtime', help='Check or install a user-local HIP7 runtime')
     command.add_argument('--hip-library', type=Path)
@@ -297,7 +299,7 @@ def emit(result, args):
     if result.get('dry_run'):
         print('Dry run completed; nothing installed.')
     elif result.get('updated') and result.get('valid'):
-        print('Existing installation updated and verified on disk. Original backups and NR settings retained; selected GPU applied.')
+        print('Existing installation updated and verified on disk. Original backups and visual settings retained; selected GPU and wait method applied.')
     elif result.get('installed') and result.get('valid'):
         print('Installation verified on disk (not an in-game rendering validation).')
     elif result.get('installed') or result.get('pending'):
@@ -317,7 +319,9 @@ def emit(result, args):
     if result.get('launch_options'):
         print('Steam launch options (only if using Steam; preserve unrelated existing options):')
         print(result['launch_options'])
-        print('First-install defaults: Enabled=1 / PreUpscale=1 / Async=0 / Interop=1; updates retain visual settings. Enable FSR as the injection hook; End opens the mod menu.')
+        print('First-install defaults: Enabled=1 / PreUpscale=1 / Async=0 / CpuWait=0 / Interop=1; updates retain visual settings. Enable FSR as the injection hook; End opens the mod menu.')
+    if result.get('wait_method'):
+        print('Wait method:', result['wait_method'], '(saved for this game; no extra Steam launch option needed)')
     for warning in result.get('warnings', []):
         print('Warning:', warning)
     for note in result.get('notes', []):
@@ -434,7 +438,7 @@ def main(argv=None):
         gpu = select_gpu(rt['devices'], args.gpu, interactive)
         if not args.dry_run:
             if not args.json and args.setup is None:
-                print('Downloading and verifying the official v0.3.0 setup (about 8 MB)...')
+                print('Downloading and verifying the official v0.3.1 setup (about 8 MB)...')
             package_root = contexts.enter_context(upstream.prepared_package(PACKAGE_ROOT, args.setup))
         weights = args.weights.expanduser() if args.weights else exe.parent / deploy.WEIGHTS
         if not args.weights and not args.nvidia_dll and not weights.is_file():
@@ -478,11 +482,13 @@ def main(argv=None):
             require(False, interactive, 'Back up and replace existing files: ' + ', '.join(conflicts) + '?', '--replace-existing')
             replace = True
         result = deploy.install_game(exe, package_root, rt, gpu, proton, weights,
-                                     acknowledge_risk=True, replace_existing=replace, dry_run=args.dry_run)
+                                     acknowledge_risk=True, replace_existing=replace, dry_run=args.dry_run,
+                                     wait_method=args.wait_method)
         emit(dict(result, exe=exe, gpu=gpu, proton=proton['root'],
                   loader_evidence=evidence.get('loader_evidence', []),
                   fsr_confirmed_by_user=evidence['fsr_confirmed_by_user'],
-                  mod_loading_verified=False, warnings=fsr_warnings + loader_warnings), args)
+                  mod_loading_verified=False,
+                  warnings=fsr_warnings + loader_warnings), args)
         return 0
     except InstallerCancelled as exc:
         print(f'Cancelled: {exc}')

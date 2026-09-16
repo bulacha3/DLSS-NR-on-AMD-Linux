@@ -34,14 +34,17 @@ def verify_assets(package_root):
 
 
 def require_deployable(manifest):
-    """Require matched, rebuilt v0.3.0 components before local staging."""
-    from .upstream import COMPONENTS, FLAG_SHADER_HASH
+    """Require components describing the pinned upstream and bridge contract."""
+    from .upstream import COMPONENTS, FLAG_SHADER_HASH, VERSION, LINUX_SYNC_SETTINGS, GRAPHICS_WAIT_HASHES
     if set(COMPONENTS) - set(manifest.get('files', {})):
         raise RuntimeError('Release components are missing. Build them or use the experimental archive from a successful CI run.')
-    if (manifest.get('mod_version') != '0.3.0' or manifest.get('hip_bridge_abi') != 2
+    if (manifest.get('mod_version') != VERSION or manifest.get('hip_bridge_abi') != 2
             or manifest.get('ordered_abi') != 3
-            or manifest.get('flag_shader_hash') != FLAG_SHADER_HASH):
-        raise RuntimeError('Components do not describe the v0.3.0 bridge contract.')
+            or manifest.get('flag_shader_hash') != FLAG_SHADER_HASH
+            or manifest.get('linux_sync_settings') != LINUX_SYNC_SETTINGS
+            or manifest.get('graphics_wait_supported') is not True
+            or manifest.get('graphics_wait_shaders') != GRAPHICS_WAIT_HASHES):
+        raise RuntimeError('Components do not describe the v' + VERSION + ' Linux bridge contract.')
 
 
 def validate_weights(path):
@@ -78,4 +81,3 @@ def validate_weights(path):
     if any(a[1]>b[0] for a,b in zip(ranges,ranges[1:])):raise RuntimeError('Overlapping weights')
     if ranges[-1][1]!=size-start:raise RuntimeError('Inconsistent weights end of file')
     return {'path':str(p.resolve()),'blobs':count,'bytes':size,'sha256':sha256(p)}
-

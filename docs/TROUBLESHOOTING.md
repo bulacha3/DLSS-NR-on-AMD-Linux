@@ -2,17 +2,29 @@
 
 ## FSR is inactive in the NR menu
 
-Check the game's input and backend separately. The tested 007 and Atomic Heart routes use **DLSS in the game** and **FSR 3.1 in OptiScaler**. Their embedded FSR options are not the validated route.
+Check the game's input and backend separately. The tested 007 and Atomic Heart routes use **DLSS in the game** and **the FSR backend in OptiScaler**. Their embedded FSR options are not the validated route.
 
-With these DLSS-input profiles, `Inputs.EnableFfxInputs=false` avoids a hook conflict between OptiScaler and NR. It disables FFX input interception, not the FSR 3.1 output backend. Do not use it globally for games that need an FFX input.
+With these DLSS-input profiles, `Inputs.EnableFfxInputs=false` avoids a hook conflict between OptiScaler and NR. It disables FFX input interception, not the FSR output backend. Do not use it globally for games that need an FFX input.
 
 Startup dispatch counters can be zero before the game creates its upscaler. Check gameplay, not just a splash screen. Use the complete [007](games/007-first-light.md) or [Atomic Heart](games/atomic-heart.md) profile.
 
 ## End does not open the menu
 
-Update that game's installation to diagnostic.4 and use its profile with `DLSSNR_SWAPCHAIN_QUEUE=1`. The option makes the swapchain's own command queue available to NR when a wrapper changes its identity.
+Update that game's installation to the current Linux release and use its profile with `DLSSNR_SWAPCHAIN_QUEUE=1`. The option makes the swapchain's own command queue available to NR when a wrapper changes its identity.
 
 Keep `Menu.OverlayMenu=true` in these profiles. Setting it to false repeatedly crashed the tested 007 configuration.
+
+## 007 crashes immediately with graphics waits
+
+007 First Light 1.2.0 failed with `graphics` and worked with `compute` on the tested configuration. New installations select compute automatically. An update preserves an existing saved choice, including graphics from earlier experiments.
+
+Close the game and switch that existing installation once:
+
+```sh
+./install.sh install --exe '/path/to/007 First Light/Retail/007FirstLight.exe' --wait-method compute
+```
+
+Keep the working launch profile. This retains upstream 0.3.1 and the game's visual settings; no extra Steam argument is required. The underlying graphics-path failure remains unresolved.
 
 ## Black screen or crash after enabling NR
 

@@ -47,6 +47,8 @@ typedef struct { int sType; uint32_t semaphoreCount; const VkSemaphore *pSemapho
 #define VKD3D_MAX_COMMAND_LIST_SEQUENCES 4
 #define D3D12_ROOT_PARAMETER_TYPE_UAV 1
 #define D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS 2
+#define VK_SHADER_STAGE_VERTEX_BIT 1
+#define VK_SHADER_STAGE_FRAGMENT_BIT 16
 #define VK_CALL(x) (x)
 #define vkd3d_calloc calloc
 #define vkd3d_free free
@@ -58,7 +60,16 @@ struct d3d12_device { struct vkd3d_vk_device_procs vk_procs; uintptr_t vk_device
 struct vkd3d_shader_root_constant { uint32_t constant_count, constant_index; };
 struct root_parameter { uint32_t parameter_type; struct vkd3d_shader_root_constant constant; };
 struct d3d12_root_signature { uint32_t parameter_count; struct root_parameter parameters[3]; };
-struct pipeline_state { struct { struct { struct { uint64_t hash; } meta; } code; } compute; };
+struct pipeline_state {
+    bool graphics_mode;
+    struct { struct { struct { uint64_t hash; } meta; } code; } compute;
+    struct {
+        unsigned stage_count;
+        struct { unsigned stage; } stages[2];
+        struct { struct { uint64_t hash; } meta; } code[2];
+    } graphics;
+};
+struct vkd3d_pipeline_bindings { struct d3d12_root_signature *root_signature; uint32_t root_constants[4]; };
 struct nr_ordered_endpoint { uint64_t token; uint32_t frame; };
 struct nr_ordered_snapshot { struct nr_ordered_snapshot *next; uint32_t count; struct nr_buffer buffers[NR_ORDERED_MAX_RESOURCES]; };
 struct nr_ordered_boundary { struct nr_ordered_endpoint nr_consumer, nr_producer; struct nr_ordered_snapshot *snapshot; };
@@ -67,10 +78,12 @@ struct d3d12_command_list {
     struct d3d12_device *device;
     struct pipeline_state *state;
     struct allocator *allocator;
-    struct { struct d3d12_root_signature *root_signature; uint32_t root_constants[4]; } compute_bindings;
+    struct vkd3d_pipeline_bindings compute_bindings, graphics_bindings;
     struct {
         uint64_t nr_flag_va, nr_abort_va, nr_armed_token, nr_armed_flag_va, nr_armed_abort_va, nr_wait_token;
         uint32_t nr_armed_frame, nr_wait_spin_cap;
+        uint64_t nr_graphics_flag_va, nr_graphics_abort_va;
+        bool nr_wait_graphics;
         uintptr_t vk_command_buffer;
         unsigned iteration_count;
         struct { struct nr_ordered_boundary nr_after; } iterations[VKD3D_MAX_COMMAND_LIST_SEQUENCES];
@@ -85,7 +98,7 @@ static VkResult prefix_result;
 static int output_result;
 static struct nr_ordered_api api;
 static struct nr_ordered_api *nr_ordered_get_api(void) { return &api; }
-static bool d3d12_pipeline_state_is_compute(struct pipeline_state *p) { return p != NULL; }
+static bool d3d12_pipeline_state_is_compute(struct pipeline_state *p) { return p && !p->graphics_mode; }
 static bool d3d12_command_list_allows_new_sequence(struct d3d12_command_list *p) { (void)p; return true; }
 static void d3d12_command_list_end_transfer_batch(struct d3d12_command_list *p, bool b) { (void)p; (void)b; }
 static void d3d12_command_list_end_current_render_pass(struct d3d12_command_list *p, bool b) { (void)p; (void)b; }
@@ -146,8 +159,15 @@ static void init(struct fixture *f) {
     f->rs.parameters[1].constant.constant_count=4;
     f->list.device=&f->device; f->list.state=&f->state; f->list.allocator=&f->alloc;
     f->list.compute_bindings.root_signature=&f->rs;
+    f->list.graphics_bindings.root_signature=&f->rs;
+    f->state.graphics.stage_count=2;
+    f->state.graphics.stages[0].stage=VK_SHADER_STAGE_VERTEX_BIT;
+    f->state.graphics.stages[1].stage=VK_SHADER_STAGE_FRAGMENT_BIT;
+    f->state.graphics.code[0].meta.hash=UINT64_C(0x97c89ca9f5ead0f9);
+    f->state.graphics.code[1].meta.hash=UINT64_C(0x9b67a44ca79c547f);
     f->list.cmd.iteration_count=1; f->list.cmd.vk_command_buffer=1;
     f->list.cmd.nr_flag_va=0x100100; f->list.cmd.nr_abort_va=0x900000;
+    f->list.cmd.nr_graphics_flag_va=0x100100; f->list.cmd.nr_graphics_abort_va=0x900000;
 }
 static void destroy(struct fixture *f) {
     while(f->alloc.nr_snapshots) {
@@ -156,9 +176,49 @@ static void destroy(struct fixture *f) {
     }
 }
 static bool record(struct fixture *f, uint32_t mode, uint32_t frame, uint32_t cap) {
+    f->state.graphics_mode=false;
     uint32_t *c=f->list.compute_bindings.root_constants;
     c[0]=mode; c[1]=frame; c[2]=cap; c[3]=0;
     return nr_ordered_dispatch_boundary(&f->list, 1, 1, 1);
+}
+static bool draw_wait(struct fixture *f, uint32_t frame, uint32_t cap) {
+    f->state.graphics_mode=true;
+    uint32_t *c=f->list.graphics_bindings.root_constants;
+    c[0]=1; c[1]=frame; c[2]=cap; c[3]=0;
+    return nr_ordered_draw_boundary(&f->list,3,1,0,0);
+}
+static void graphics_sequences(void) {
+    struct fixture f;
+    const unsigned slices[]={1,64,4000};
+    for (unsigned s=0;s<3;++s) {
+        init(&f); assert(!record(&f,0,1,0));
+        for (unsigned i=0;i<slices[s];++i) assert(draw_wait(&f,1,256));
+        assert(!record(&f,2,1,0) && !f.device.removed);
+        assert(snapshots==1 && barriers==2 && f.list.cmd.iteration_count==2);
+        assert(!f.list.cmd.nr_wait_token && !f.list.cmd.nr_wait_graphics);
+        destroy(&f);
+    }
+    for (unsigned kind=0;kind<9;++kind) {
+        init(&f);
+        if (kind) assert(!record(&f,0,1,0));
+        switch(kind) {
+        case 0: draw_wait(&f,1,256); break; /* no producer */
+        case 1: f.list.cmd.nr_graphics_flag_va+=4; draw_wait(&f,1,256); break;
+        case 2: f.list.cmd.nr_graphics_abort_va+=8; draw_wait(&f,1,256); break;
+        case 3: draw_wait(&f,2,256); break; /* wrong frame */
+        case 4: f.state.graphics.code[0].meta.hash=0; draw_wait(&f,1,256); break;
+        case 5: draw_wait(&f,1,256); record(&f,1,1,256); break; /* mixed wait kinds */
+        case 6: draw_wait(&f,1,256); draw_wait(&f,1,512); break;
+        case 7: draw_wait(&f,1,256); record(&f,2,2,0); break;
+        case 8: draw_wait(&f,1,0); break;
+        }
+        assert(f.device.removed==DXGI_ERROR_INVALID_CALL); destroy(&f);
+    }
+    init(&f); assert(!record(&f,0,1,0));
+    f.state.graphics.code[1].meta.hash=0; /* ordinary game draw is untouched */
+    assert(!draw_wait(&f,1,256) && !f.device.removed && !snapshots); destroy(&f);
+    init(&f); assert(!record(&f,0,1,0)); assert(draw_wait(&f,1,256));
+    assert(nr_ordered_draw_boundary(&f.list,6,1,0,0) && f.device.removed); destroy(&f);
 }
 static int golden_sequence(unsigned slices) {
     struct fixture f; init(&f);
@@ -222,6 +282,7 @@ int main(int argc, char **argv) {
     if (argc==2) return golden_sequence((unsigned)strtoul(argv[1],NULL,10));
     if (golden_sequence(1) || golden_sequence(4000)) return 1;
     invalid_sequences();
+    graphics_sequences();
     puts("vkd3d ordered protocol contracts passed (CPU mocks; no GPU validation)");
     return 0;
 }

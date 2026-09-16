@@ -38,7 +38,7 @@ jobs:
         run: |
           gcc -std=gnu11 -O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer -pthread tests/native_contract.c -ldl -o build/native-contract
           ASAN_OPTIONS=detect_leaks=0 ./build/native-contract
-      - name: Replay v0.3.0 command recording protocol
+      - name: Replay Linux compute and graphics recording protocols
         run: |
           gcc -std=gnu11 -O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer -I build/vkd3d-source/libs/vkd3d tests/vkd3d_ordered_contract.c -o build/vkd3d-contract
           ASAN_OPTIONS=detect_leaks=0 ./build/vkd3d-contract
@@ -64,8 +64,32 @@ jobs:
       - name: Upload experimental package
         uses: actions/upload-artifact@v4
         with:
-          name: dlssnr-linux-portable
+          name: dlssnr-linux-0.3.1-linux.1
           path: |
             dist/dlssnr-linux-portable.tar.gz
             dist/dlssnr-linux-portable.tar.gz.sha256
           if-no-files-found: error
+
+  release:
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'bulacha3/DLSS-NR-on-AMD-Linux'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    concurrency:
+      group: release-0.3.1-linux.1
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: dlssnr-linux-0.3.1-linux.1
+          path: dist
+      - name: Publish verified experimental release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: v0.3.1-linux.1
+        run: bash scripts/publish-release.sh

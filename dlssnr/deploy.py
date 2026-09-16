@@ -202,7 +202,33 @@ def _weights(path):
     return {'bytes': size, 'sha256': _digest(path)}
 
 
-def _ini(data, index, *, update=False):
+def _select_wait_method(data, requested=None):
+    """Keep the existing INI choice on update; no new journal format is needed."""
+    from .upstream import DEFAULT_WAIT_METHOD
+    if requested is not None:
+        if requested not in ('compute', 'graphics'):
+            raise ValueError('Wait method must be compute or graphics')
+        return requested
+    try:
+        text = data.decode('utf-8')
+    except UnicodeError as exc:
+        raise RuntimeError('NR INI must be UTF-8') from exc
+    active = False
+    for line in text.splitlines():
+        section = re.match(r'^\s*\[([^]]+)\]', line)
+        if section:
+            active = section[1].casefold() == 'dlssnronamd'
+        if active and (match := re.match(r'^\s*SpinDraw\s*=\s*([^;#]*)', line, re.I)):
+            value = match[1].strip()
+            if value not in ('0', '1'):
+                raise RuntimeError('Unrecognized SpinDraw value; select --wait-method graphics or compute.')
+            return 'graphics' if value == '1' else 'compute'
+    return DEFAULT_WAIT_METHOD
+
+
+def _ini(data, index, *, update=False, wait_method=None):
+    from .upstream import LINUX_SYNC_SETTINGS
+    wait_method = _select_wait_method(data if update else b'', wait_method)
     try:
         text = data.decode('utf-8')
     except UnicodeError as exc:
@@ -211,6 +237,8 @@ def _ini(data, index, *, update=False):
     values = {'Enabled': '1', 'PreUpscale': '1', 'PreHistory': '0', 'Async': '0', 'InlineWaitMs': '200', 'Interop': '1', 'HipDevice': str(index)}
     if update:
         values = {'HipDevice': str(index), 'Async': '0'}
+    values.update(LINUX_SYNC_SETTINGS)
+    values['SpinDraw'] = '1' if wait_method == 'graphics' else '0'
     lines = text.splitlines(keepends=True)
     start = None
     end = len(lines)
@@ -625,11 +653,11 @@ def _recover_update(exe):
 
 
 def _update_game(exe, prior, assets, hashes, weights, weight_info, wrapper,
-                 cache, request, gpu, dry_run):
+                 cache, request, gpu, dry_run, wait_method):
     store = exe.parent / STORE
     _cleanup(store, check_only=True)
     ini = _bytes(exe.parent / INI)
-    payloads = {INI: _ini(ini, gpu['index'], update=True), STORE + '/launch.sh': wrapper}
+    payloads = {INI: _ini(ini, gpu['index'], update=True, wait_method=wait_method), STORE + '/launch.sh': wrapper}
     sources = {name: assets / name for name in DLLS}
     sources[STORE + '/runtime/' + BRIDGE] = assets / BRIDGE
     sources[WEIGHTS] = weights
@@ -650,7 +678,7 @@ def _update_game(exe, prior, assets, hashes, weights, weight_info, wrapper,
             item.update(preserve=False, touched=True)
     _validate_manifest(exe, after)
     if dry_run:
-        return dict(_status(exe), dry_run=True, update_planned=True, changed_files=list(snapshots))
+        return dict(_status(exe), dry_run=True, update_planned=True, changed_files=list(snapshots), wait_method=wait_method)
     _cache(assets / BRIDGE, hashes[BRIDGE], cache)
     journal = {'phase': 'preparing', 'before': prior, 'after': after, 'snapshots': snapshots}
     marker = store / 'update.json'
@@ -694,11 +722,13 @@ def _update_game(exe, prior, assets, hashes, weights, weight_info, wrapper,
             raise RuntimeError(f'Update recovery incomplete: {recovery}; retain backups and rerun install.') from recovery
         raise
     _update_cleanup(store)
-    return dict(_status(exe), updated=True, idempotent=False, dry_run=False, changed_files=list(snapshots))
+    return dict(_status(exe), updated=True, idempotent=False, dry_run=False, changed_files=list(snapshots), wait_method=wait_method)
 
 
 def install_game(exe, package_root, runtime, gpu, proton, weights, *,
-                 acknowledge_risk=False, replace_existing=False, dry_run=False):
+                 acknowledge_risk=False, replace_existing=False, dry_run=False, wait_method=None):
+    if wait_method is not None and wait_method not in ('compute', 'graphics'):
+        raise ValueError('Wait method must be compute or graphics')
     if not acknowledge_risk:
         raise RuntimeError('Explicit acknowledge_risk=True is required before injection; anti-cheat risk is not bypassed')
     exe = _exe(exe)
@@ -716,10 +746,14 @@ def install_game(exe, package_root, runtime, gpu, proton, weights, *,
             if prior['state'] != 'installed':
                 raise RuntimeError('Pending transaction: run uninstall for recovery before install')
             _verify(exe, prior, allow_ini_changes=True)
+        current_ini = _bytes(exe.parent / INI) if prior else b''
+        wait_method = _select_wait_method(current_ini, wait_method)
         if type(gpu.get('index')) is not int or gpu['index'] < 0 or not isinstance(gpu.get('name'), str) or not gpu['name']:
             raise RuntimeError('Select an explicit GPU index and name')
         assets = _safe(Path(package_root) / 'assets', directory=True)
         manifest = _json(assets / 'manifest.json')
+        if wait_method == 'graphics' and (type(manifest) is not dict or manifest.get('graphics_wait_supported') is not True):
+            raise RuntimeError('This package does not support graphics waits')
         hashes = manifest.get('files', manifest) if type(manifest) is dict else None
         if type(hashes) is not dict:
             raise RuntimeError('Invalid asset manifest files map')
@@ -732,19 +766,21 @@ def install_game(exe, package_root, runtime, gpu, proton, weights, *,
         wrapper = _wrapper(exe, runtime, gpu, cache, hashes[BRIDGE])
         request = hashlib.sha256(json.dumps({'assets': {name: hashes[name] for name in DLLS + (BRIDGE,)},
                                              'weights': weight_info, 'wrapper': wrapper.decode(),
-                                             'gpu_index': gpu['index'], 'proton': str(proton.get('root', ''))}, sort_keys=True).encode()).hexdigest()
+                                             'gpu_index': gpu['index'], 'proton': str(proton.get('root', '')),
+                                             'wait_method': wait_method}, sort_keys=True).encode()).hexdigest()
         if prior:
-            if prior['request'] == request:
-                return dict(_status(exe), idempotent=True, dry_run=dry_run)
+            if (prior['request'] == request and
+                    _ini(current_ini, gpu['index'], update=True, wait_method=wait_method) == current_ini):
+                return dict(_status(exe), idempotent=True, dry_run=dry_run, wait_method=wait_method)
             return _update_game(exe, prior, assets, hashes, weights, weight_info,
-                                wrapper, cache, request, gpu, dry_run)
+                                wrapper, cache, request, gpu, dry_run, wait_method)
         for name in TARGETS:
             _safe(exe.parent / name, missing=True)
         for name in DLLS:
             if (exe.parent / name).exists() and not replace_existing:
                 raise RuntimeError(f'Existing {name}: explicit replace_existing=True required')
         ini_path = exe.parent / INI
-        ini_data = _ini(_bytes(ini_path) if ini_path.exists() else b'', gpu['index'])
+        ini_data = _ini(_bytes(ini_path) if ini_path.exists() else b'', gpu['index'], wait_method=wait_method)
         sources = {name: assets / name for name in DLLS}
         sources[STORE + '/runtime/' + BRIDGE] = assets / BRIDGE
         sources[WEIGHTS] = weights
@@ -759,7 +795,7 @@ def install_game(exe, package_root, runtime, gpu, proton, weights, *,
             files[name] = _entry(exe.parent / name, digest, mode, name == WEIGHTS and weights == exe.parent / WEIGHTS)
         data = {'schema': 1, 'exe': str(exe), 'state': 'preparing', 'files': files,
                 'request': request, 'cache': str(cache), 'undo': {}}
-        result = {'installed': False, 'valid': False, 'dry_run': True, 'notes': list(NOTES),
+        result = {'installed': False, 'valid': False, 'dry_run': True, 'notes': list(NOTES), 'wait_method': wait_method,
                   'command_prefix': shlex.quote(str(store / 'launch.sh')),
                   'launch_options': shlex.quote(str(store / 'launch.sh')) + ' %command%'}
         if dry_run:
@@ -807,7 +843,7 @@ def install_game(exe, package_root, runtime, gpu, proton, weights, *,
             except Exception as recovery:
                 raise RuntimeError(f'Rollback incomplete: {recovery}; run uninstall for recovery') from recovery
             raise
-        return dict(_status(exe), idempotent=False, dry_run=False)
+        return dict(_status(exe), idempotent=False, dry_run=False, wait_method=wait_method)
 
 
 def uninstall_game(exe):

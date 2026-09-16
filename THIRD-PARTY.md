@@ -8,7 +8,7 @@
 - vkd3d-proton: HansKristian-Work/vkd3d-proton at the pinned commit recorded in
   PROVENANCE.json. Its LGPL notices, copying terms, authors, dependency notices,
   complete local patch and submodule pins accompany the build.
-- DLSS-NR on AMD v0.3.0: danielblnc/DLSS-NR-on-AMD. The official setup is fetched
+- DLSS-NR on AMD v0.3.1: danielblnc/DLSS-NR-on-AMD. The official setup is fetched
   and verified only on the user's computer. Its setup and embedded runtime
   are used without changing their bytes and are excluded from Git and build
   artifacts. See the upstream repository for its license and original notices.

@@ -26,7 +26,7 @@ Some games embed FSR in the executable. Missing filename evidence does not ident
 
 ## Runtime and weights
 
-The installer checks HIP and can offer a local runtime download. It also downloads and verifies the original upstream 0.3.0 setup, approximately 8 MB.
+The installer checks HIP and can offer a local runtime download. It also downloads and verifies the original upstream 0.3.1 setup, approximately 8 MB.
 
 Supply your own **`nvngx_dlssnr.dll` 310.8.0.0**, or converted `DLSSNRW1` weights. You can keep the DLL outside the game folder. Ordinary `nvngx_dlss.dll` is a different component.
 
@@ -42,7 +42,9 @@ Paste the printed command into Steam's **Properties → General → Launch Optio
 
 Follow the game's profile. With OptiScaler, **DLSS input in the game** can feed an **FSR 3.1 output backend**. **End** opens NR; **Insert** opens OptiScaler.
 
-New installations enable `PreUpscale=1`. Updates preserve visual settings and enforce `Async=0` for this Linux bridge.
+New installations enable `PreUpscale=1`. Compute synchronization is selected automatically (`SpinDraw=0`); no extra wait-method argument is needed. Updates preserve visual settings and the saved wait method. `Async=0` and `CpuWait=0` are enforced for this Linux bridge.
+
+For an existing experimental installation that saved graphics waits, select compute once with `./install.sh install --exe "/path/to/Game/Game.exe" --wait-method compute`. That choice stays saved for the game. Graphics is an advanced opt-in with a known startup failure in 007 First Light 1.2.0.
 
 ## Update, uninstall and diagnose
 
