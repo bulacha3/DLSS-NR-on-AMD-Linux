@@ -1,0 +1,42 @@
+{
+  "version": "2.3.5",
+  "source": "https://pypi.org/pypi/numpy/2.3.5/json",
+  "wheels": {
+    "cp311": {
+      "filename": "numpy-2.3.5-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+      "url": "https://files.pythonhosted.org/packages/65/fb/2b23769462b34398d9326081fad5655198fcf18966fcb1f1e49db44fbf31/numpy-2.3.5-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+      "bytes": 16897903,
+      "sha256": "8cba086a43d54ca804ce711b2a940b16e452807acebe7852ff327f1ecd49b0d4"
+    },
+    "cp312": {
+      "filename": "numpy-2.3.5-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+      "url": "https://files.pythonhosted.org/packages/b6/23/2a1b231b8ff672b4c450dac27164a8b2ca7d9b7144f9c02d2396518352eb/numpy-2.3.5-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+      "bytes": 16606086,
+      "sha256": "0d8163f43acde9a73c2a33605353a4f1bc4798745a8b1d73183b28e5b435ae28"
+    },
+    "cp313": {
+      "filename": "numpy-2.3.5-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+      "url": "https://files.pythonhosted.org/packages/f5/10/ca162f45a102738958dcec8023062dad0cbc17d1ab99d68c4e4a6c45fb2b/numpy-2.3.5-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+      "bytes": 16597430,
+      "sha256": "11e06aa0af8c0f05104d56450d6093ee639e15f24ecf62d417329d06e522e017"
+    },
+    "cp313t": {
+      "filename": "numpy-2.3.5-cp313-cp313t-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+      "url": "https://files.pythonhosted.org/packages/a5/87/6831980559434973bebc30cd9c1f21e541a0f2b0c280d43d3afd909b66d0/numpy-2.3.5-cp313-cp313t-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+      "bytes": 16657359,
+      "sha256": "ce581db493ea1a96c0556360ede6607496e8bf9b3a8efa66e06477267bc831e9"
+    },
+    "cp314": {
+      "filename": "numpy-2.3.5-cp314-cp314-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+      "url": "https://files.pythonhosted.org/packages/c8/f6/07ec185b90ec9d7217a00eeeed7383b73d7e709dae2a9a021b051542a708/numpy-2.3.5-cp314-cp314-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+      "bytes": 16597350,
+      "sha256": "fffe29a1ef00883599d1dc2c51aa2e5d80afe49523c261a74933df395c15c520"
+    },
+    "cp314t": {
+      "filename": "numpy-2.3.5-cp314-cp314t-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+      "url": "https://files.pythonhosted.org/packages/80/35/09d433c5262bc32d725bafc619e095b6a6651caf94027a03da624146f655/numpy-2.3.5-cp314-cp314t-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+      "bytes": 16655054,
+      "sha256": "09a1bea522b25109bf8e6f3027bd810f7c1085c64a0c7ce050c1676ad0ba010b"
+    }
+  }
+}

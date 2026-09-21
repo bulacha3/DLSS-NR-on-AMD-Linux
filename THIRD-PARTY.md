@@ -9,13 +9,23 @@
   PROVENANCE.json. Its LGPL notices, copying terms, authors, dependency notices,
   complete local patch and submodule pins accompany the build.
 - DLSS-NR on AMD v0.3.1: danielblnc/DLSS-NR-on-AMD. The official setup is fetched
-  and verified only on the user's computer. Its setup and embedded runtime
-  are used without changing their bytes and are excluded from Git and build
-  artifacts. See the upstream repository for its license and original notices.
+  and verified during local installation and CI checks. Its setup and
+  embedded runtime are used without changing their bytes and are excluded from
+  Git and portable packages. See the upstream repository for its license and
+  original notices.
 - NVIDIA DLL and converted weights: supplied by the user; never bundled.
 - AMD HIP/ROCm: external runtime, not included in the portable archive.
 - LLVM/MinGW: a separately downloaded, hash-verified build toolchain. Its
   source and third-party terms are provided by mstorsjo/llvm-mingw.
+
+- lmxxf HIP backend: pinned sources and selective backports are recorded in
+  `experiments/lmxxf/stage4/runtime/build.json`. Compiled GPU modules and the
+  Linux integration source are included. The upstream MIT notice is retained
+  in `experiments/lmxxf/LICENSE.upstream`. Model data is prepared locally from
+  the user's DLL and is never bundled.
+- NumPy: used for local model preparation. When needed, the installer downloads
+  a hash-verified official wheel into a private environment. NumPy and its
+  dependency notices accompany that wheel; it is not bundled here.
 
 New standalone integration helpers and tests are covered by
 licenses/PROJECT-MIT.txt. That notice does not replace the licenses or missing

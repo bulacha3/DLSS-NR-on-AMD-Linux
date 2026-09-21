@@ -3,7 +3,7 @@ name: Build and test Linux bridge
 on:
   workflow_dispatch:
   push:
-    branches: [main, "codex/**"]
+    branches: [main]
   pull_request:
 
 permissions:
@@ -32,13 +32,13 @@ jobs:
       - name: Download verified compiler
         run: |
           python scripts/fetch-toolchain.py build-toolchain >> "$GITHUB_PATH"
-      - name: Build original bridge and patched D3D12
+      - name: Build Linux bridge and patched D3D12
         run: bash scripts/build-components.sh
       - name: Run native synchronization tests
         run: |
           gcc -std=gnu11 -O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer -pthread tests/native_contract.c -ldl -o build/native-contract
           ASAN_OPTIONS=detect_leaks=0 ./build/native-contract
-      - name: Replay Linux compute and graphics recording protocols
+      - name: Replay Linux ordered compute and graphics protocols
         run: |
           gcc -std=gnu11 -O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer -I build/vkd3d-source/libs/vkd3d tests/vkd3d_ordered_contract.c -o build/vkd3d-contract
           ASAN_OPTIONS=detect_leaks=0 ./build/vkd3d-contract
@@ -61,10 +61,10 @@ jobs:
           python -m unittest discover -s tests -v
           python -m compileall -q dlssnr installer.py stage_upstream.py
           git diff --exit-code
-      - name: Upload experimental package
+      - name: Upload portable package
         uses: actions/upload-artifact@v4
         with:
-          name: dlssnr-linux-0.3.1-linux.1
+          name: dlssnr-linux-portable
           path: |
             dist/dlssnr-linux-portable.tar.gz
             dist/dlssnr-linux-portable.tar.gz.sha256
@@ -77,7 +77,7 @@ jobs:
     permissions:
       contents: write
     concurrency:
-      group: release-0.3.1-linux.1
+      group: release-0.31.1-lmxxf
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
@@ -85,11 +85,11 @@ jobs:
           persist-credentials: false
       - uses: actions/download-artifact@v4
         with:
-          name: dlssnr-linux-0.3.1-linux.1
+          name: dlssnr-linux-portable
           path: dist
       - name: Publish verified experimental release
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          RELEASE_TAG: v0.3.1-linux.1
+          RELEASE_TAG: v0.31.1-lmxxf
         run: bash scripts/publish-release.sh

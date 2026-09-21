@@ -593,6 +593,12 @@ static int import_native(void **out, const struct pe_extmem_desc *in) {
 }
 
 /* Wine fence fd is a DRM syncobj, not a HIP timeline. Signal it ourselves. */
+#ifdef DLSSNR_ACTIVE_C32
+#include "active_c32.c"
+#else
+#include "c32_prepack.c"
+#endif
+
 static void *stub_reg_fat(void *data) {
     logmsg("__hipRegisterFatBinary");
     if (ensure_hip() || !real.p___hipRegisterFatBinary)
@@ -611,6 +617,11 @@ static void stub_reg_fn(void **mo, const void *hf, char *df, const char *dn, uns
         return;
     real.p___hipRegisterFunction(mo, hf, df, dn, tl, tid, bid, bd, gd, ws);
     if (dn && hf) {
+#ifdef DLSSNR_ACTIVE_C32
+        c32_register(hf,dn);
+#else
+        if (!strcmp(dn, C32_NAME)) c32_original=hf;
+#endif
         if (strstr(dn, "k_flag_wait")) {
             g_flag_wait = (void *)hf;
             logmsg("kernel %s hf=%p", dn, hf);
@@ -673,21 +684,29 @@ static int stub_rtver(int *v) {
 static int stub_malloc(void **p, u64 n) {
     if (ensure_hip() || !real.p_hipMalloc)
         return 3;
-    return real.p_hipMalloc(p, n);
+    int e=real.p_hipMalloc(p, n);
+    if (!e) c32_track(*p,n);
+    return e;
 }
 static int stub_free(void *p) {
     if (ensure_hip() || !real.p_hipFree)
         return 3;
-    return real.p_hipFree(p);
+    int e=c32_invalidate(p,1,1);
+    if (e) return e;
+    e=real.p_hipFree(p);
+    if (!e) c32_untrack(p);
+    return e;
 }
 static int stub_memcpy(void *d, const void *s, u64 n, int k) {
     if (ensure_hip() || !real.p_hipMemcpy)
         return 3;
+    if (k!=2) { int e=c32_invalidate(d,n,0);if (e) return e; }
     return real.p_hipMemcpy(d, s, n, k);
 }
 static int stub_memcpy_async(void *d, const void *s, u64 n, int k, void *st) {
     if (ensure_hip() || !real.p_hipMemcpyAsync)
         return 3;
+    if (k!=2) { int e=c32_invalidate(d,n,0);if (e) return e; }
     return real.p_hipMemcpyAsync(d, s, n, k, st);
 }
 static int stub_memcpy_sym(const void *sym, const void *s, u64 n, u64 off, int k) {
@@ -698,11 +717,13 @@ static int stub_memcpy_sym(const void *sym, const void *s, u64 n, u64 off, int k
 static int stub_memset(void *d, int v, u64 n) {
     if (ensure_hip() || !real.p_hipMemset)
         return 3;
+    { int e=c32_invalidate(d,n,0);if (e) return e; }
     return real.p_hipMemset(d, v, n);
 }
 static int stub_memset_async(void *d, int v, u64 n, void *st) {
     if (ensure_hip() || !real.p_hipMemsetAsync)
         return 3;
+    { int e=c32_invalidate(d,n,0);if (e) return e; }
     return real.p_hipMemsetAsync(d, v, n, st);
 }
 
@@ -744,7 +765,9 @@ static int stub_launch(const void *f, dim3_t nb, dim3_t db, void **a, u64 sh, vo
         logmsg("launch #%u f=%p grid=%u,%u,%u block=%u,%u,%u st=%p set=%d exp=%d", g_nlaunch_log, f, nb.x,
                nb.y, nb.z, db.x, db.y, db.z, st, f == g_flag_set, f == g_k_export);
     }
-    e = real.p_hipLaunchKernel(f, nb, db, a, sh, st);
+    if (c32_requested() && f==c32_original && nr_job.active) c32_frame(nr_job.token,nr_job.frame);
+    if (!c32_try_launch(f,nb,db,a,sh,st,&e))
+        e = real.p_hipLaunchKernel(f, nb, db, a, sh, st);
     if (e && nr_job.active)
         return nr_job_error(e);
     return e;
@@ -883,4 +906,7 @@ __attribute__((constructor)) static void dlssnr_hip_init(void) {
     snprintf(buf, sizeof(buf), "%p", (void *)&nr_api);
     setenv(NR_ORDERED_ENV, buf, 1);
     logmsg("preload lazy table=%s (HIP not opened yet)", buf);
+#ifdef DLSSNR_ACTIVE_C32
+    c32_startup();
+#endif
 }

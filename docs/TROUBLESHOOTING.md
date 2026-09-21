@@ -1,50 +1,49 @@
 # Troubleshooting
 
-## FSR is inactive in the NR menu
+## FSR is inactive in the DLSS-NR menu
 
-Check the game's input and backend separately. The tested 007 and Atomic Heart routes use **DLSS in the game** and **the FSR backend in OptiScaler**. Their embedded FSR options are not the validated route.
-
-With these DLSS-input profiles, `Inputs.EnableFfxInputs=false` avoids a hook conflict between OptiScaler and NR. It disables FFX input interception, not the FSR output backend. Do not use it globally for games that need an FFX input.
-
-Startup dispatch counters can be zero before the game creates its upscaler. Check gameplay, not just a splash screen. Use the complete [007](games/007-first-light.md) or [Atomic Heart](games/atomic-heart.md) profile.
+Check the selected upscaler against the game's setup guide. For the OptiScaler
+profiles, select **DLSS in the game** and **FSR as the OptiScaler backend**.
+The `Inputs.EnableFfxInputs=false` option applies to these DLSS-input profiles;
+do not copy it to an FSR-input setup.
 
 ## End does not open the menu
 
-Update that game's installation to the current Linux release and use its profile with `DLSSNR_SWAPCHAIN_QUEUE=1`. The option makes the swapchain's own command queue available to NR when a wrapper changes its identity.
-
-Keep `Menu.OverlayMenu=true` in these profiles. Setting it to false repeatedly crashed the tested 007 configuration.
+Check that Steam uses the printed launcher path. With OptiScaler, use the game's
+complete launch profile, including `DLSSNR_SWAPCHAIN_QUEUE=1` and
+`Menu.OverlayMenu=true`.
 
 ## 007 crashes immediately with graphics waits
 
-007 First Light 1.2.0 failed with `graphics` and worked with `compute` on the tested configuration. New installations select compute automatically. An update preserves an existing saved choice, including graphics from earlier experiments.
-
-Close the game and switch that existing installation once:
+Close the game and select compute synchronization:
 
 ```sh
 ./install.sh install --exe '/path/to/007 First Light/Retail/007FirstLight.exe' --wait-method compute
 ```
 
-Keep the working launch profile. This retains upstream 0.3.1 and the game's visual settings; no extra Steam argument is required. The underlying graphics-path failure remains unresolved.
+New installations already use compute. No extra Steam option is needed.
 
-## Black screen or crash after enabling NR
+## Black screen or crash after enabling DLSS-NR
 
-Close the game. Set `Enabled=0` in `dlssnr_on_amd.ini` beside the executable before relaunching. Check the game's profile and selected Proton runner.
+Close the game and set `Enabled=0` in `dlssnr_on_amd.ini` beside the executable.
+Check the game's setup guide and Proton runner before enabling it again.
 
-If a report is needed, reproduce once with fixed settings and retain the matching NR, HIP, vkd3d and OptiScaler logs. Review the [privacy guide](PRIVACY.md) before sharing them.
+## After a game update
 
-## Reduce diagnostic output
+Check the game's upscaler setting and Steam launch options. If DLSS-NR still
+works, no reinstall is needed. New native FSR support does not require changing
+an existing OptiScaler setup.
 
-Add `DLSSNR_DIAGNOSTICS=0` before the wrapper command to disable the bridge's extra tracing. This does not disable every log written by the game, Proton, upstream runtime or OptiScaler.
-
-The wrapper uses vkd3d's `warn` level so device-removal reasons are retained. Some logs append multiple launches: earlier failures may belong to another session.
+If the installer reports `Deployed file changed`, keep its backups and report
+the named file. It will not overwrite files changed by a game update.
 
 ## Installer checks
 
-- **Invalid executable:** select the actual 64-bit executable and quote its path.
-- **Runner missing:** type `steam` and select the game's configured runner. Incompatible entries include their validation errors.
-- **DLL rejected:** supply `nvngx_dlssnr.dll` 310.8.0.0; ordinary `nvngx_dlss.dll` is not the NR model source.
-- **Metadata-only checkout:** use the portable package or [build the components](../sources/README.md).
+- **Invalid executable:** select the actual 64-bit game executable and quote its path.
+- **Runner missing:** choose the runner configured for that game; use the manual path option if it is not listed.
+- **Launch Options:** copy the field from Steam → Properties → General. Use the empty-field option only when that field is empty.
+- **DLL rejected:** use `nvngx_dlssnr.dll` 310.8.0.0, not ordinary `nvngx_dlss.dll`.
+- **Missing build assets:** use the portable release or [build from source](../sources/README.md).
 
-## What successful validation means
-
-An open menu or installer check alone is insufficient. Gameplay analysis established FSR interception, positive GPU network time and completed ordered producer/HIP/consumer jobs. These are not controlled image-quality benchmarks or proof of universal compatibility or long-session stability.
+Add `DLSSNR_DIAGNOSTICS=0` before the launcher command to disable extra bridge
+tracing. Before sharing logs, remove personal paths and identifiers.

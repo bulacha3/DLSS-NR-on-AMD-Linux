@@ -1,0 +1,172 @@
+{
+  "format": "lmxxf-stage4-build-v13",
+  "revision": 13,
+  "upstream_commit": "90abf6a2d3e3b08136ab56de0c658d830b327865",
+  "compiler": "AMD COMGR 3.3; gfx1201",
+  "kernel": {
+    "module": "game-io.hsaco",
+    "bytes": 48744,
+    "prefix_name": "lmxxf_game_prefix_rgb",
+    "prefix_arguments_bytes": 100,
+    "prefix_parameter_offset": 76,
+    "prefix_parameter_bytes": 24,
+    "head_name": "lmxxf_game_head_rgba",
+    "head_arguments_bytes": 88,
+    "threads": 128,
+    "target": "gfx1201",
+    "private_segment_fixed_size": 0,
+    "vgpr_spills": 0,
+    "sgpr_spills": 0
+  },
+  "resident_abi": 3,
+  "frame_bytes": 96,
+  "prefix_offset": 72,
+  "config_bytes": 40,
+  "stream": "all execution on original borrowed stream; private nonblocking stream for capture only",
+  "core_modules": "27 GPU modules, byte-identical to v12; host-only resource and diagnostic changes",
+  "files": {
+    "include/game_graph_members.inc": "de2a43117e5c9f2365bb8faa6b8cf3f3952cddb69a08ca91fe249d741e84797a",
+    "include/hip_api.h": "1ccf7a6d1fdc219db105576ee0b8954090b24efcba7921a8afea8d460a35fb8e",
+    "include/hip_reference_network.h": "2b47d36f29623a730067a198917f7508b0e60e7cbe59ab51a5d56046955cdff4",
+    "include/optimized_options.h": "3618843aeb3903de143efb380527ee2cd811020f6aadb772417403e27b791436",
+    "include/packed_weights.h": "4aa0a3a8b014cb0c517d7c9e4811a1af5e3f92f7165a5b90c4e3d0edced99d35",
+    "include/prefix_parameters.h": "b055d4a6f2452b1d93b7f2fba4793cf1675893f4d88fe13eb2465bc07aa69197",
+    "include/resident_lifecycle.inc": "5a2411d27727f80486b1dcdcef114c831e43b6e6ae27623181a65e34e17156d6",
+    "include/stage4_geometry.h": "ad5bd6219a8624f9cfb484a4dd7c0dce1bc3457022fade157fca9b98bdc3f53c",
+    "modules/boundary-fast.hsaco": "ce92985b5e919892402404740107b26ad357b953fec2f319382f1403d577b0b4",
+    "modules/boundary_reference.hsaco": "65be6f0c74c85587792f1ab7d085f391ae23cde5ba44a0b8dd590d1310da9bac",
+    "modules/c32_fast.hsaco": "82161fbd9eac9fd0776cc8be1b938c55c049a1840a9c593200ae0da3a4eb477b",
+    "modules/c32_fast_attention.hsaco": "1c60abc431c0781f4b90e403aff58810710ce73c5326a0c8e2ce2e2eab3f2859",
+    "modules/c32_fused_attention.hsaco": "1acc2600775d9db75a99d8901e56c434dbe20b88cb931802d36dd0d371ddf6ed",
+    "modules/c32_fused_ffn_attention-packed.hsaco": "c8dc5728807db6f2f76a564fe1656a78d8491d931c427dc7ada972104d12a25f",
+    "modules/c32_fused_ffn_attention.hsaco": "e75c9abfbe45c6466d9c0703441c52cbd7015c58cfdaf088666c117ba072625a",
+    "modules/c32_prefix_reference.hsaco": "a38a8caa90cd0b5cb99c11387abcae204315ef4470369df703298213162463d5",
+    "modules/c32_tiled.hsaco": "a872a5bb57b29a81c9398bc8ac80adf6d449ad375336de78d4ecaeecc6c9681f",
+    "modules/c32_wmma.hsaco": "f5607d919075137f065df5fbc69f591048f6521a87a072ecd2e0f682c5c60360",
+    "modules/deep_fast-packed.hsaco": "de9c5bed62e9775292b9f1daf1b8c1c2fa2a149106e065a4093f9d4eb0bf3db0",
+    "modules/deep_fast.hsaco": "3166b8d203291851eadea4ed24db46ebbab3f6746117fbaeba56f07d66b736e6",
+    "modules/deep_reference.hsaco": "b0da62fbe61a31fe1b4f0d1b3bd42588a72833710974238539816015618c4cb8",
+    "modules/deep_wmma.hsaco": "a15efcdbc1050e0ce3e594ef9e85893f68f37b0a1a0dda4c38b352a609c8c552",
+    "modules/game-io.hsaco": "1f2a12bd0c04c4721f28307d7267e2aed5ae88b44bcd2997d8c00b8b2ba723e6",
+    "modules/game-prefix.hsaco": "2a0cf70caf206a1490c1db622c202c518bc1142a0cc98480468cfdf7eab4c908",
+    "modules/multihead-fast-packed.hsaco": "556580502c5a2b4a7233f0bb2c37c89cc3acb40ffa1247fef79fc95eb178d9c8",
+    "modules/multihead-fast-padded-wave-packed.hsaco": "703903da30c6ff0599f16e191ce10f34374459f257f7b1e8393560082cce2018",
+    "modules/multihead-fast-padded-wave.hsaco": "6b21ce5f19d1c499df3c47cfa01f03160cd63d6c31c0e26fdeefa6b88854a667",
+    "modules/multihead-fast.hsaco": "286c38f91fdf226799b8d2813712ea09107c3babd6bcb846da90adde6c795fac",
+    "modules/multihead-reference.hsaco": "206bc9101b5fc612ec41437e9fb9938c8521dff42aeb8e68222c03063325a93d",
+    "modules/multihead-tiled.hsaco": "1cdc0e4e3a88e9d2b025b0bdc6b19e9effb4608d8d85e619db8a805b9bfa0056",
+    "modules/multihead-wmma.hsaco": "54e13231fa1720410ab15482b88979511d58c985c8718d7f8c2e894c4ee1ab44",
+    "modules/multihead_fused_attention.hsaco": "6be139d0e5380e2e187a70e9d7aa01295ee0d0823af4d11e25e83f7a4ea7c5b3",
+    "modules/prefix_fast.hsaco": "5a3563141a46f005d2fddb51b1d455168beef44ca02719f3c0b59aff636e696d",
+    "modules/stage4-boundary.hsaco": "2a6dedf04a9db4b34d8c066a4d81d296bd43b4b480665b2ee11fe733026a6cca",
+    "modules/wave-pointwise.hsaco": "2649b650ae0195a2e74a37d2046e52ba5c2662b8a3dd397b05ec2f017b4ba931",
+    "include/game_profile_members.inc": "64232f2e07d77bb2adc404e47e2ce6a8eb4fe8d8e70452a3fd677388e2d2b6d8"
+  },
+  "integration_sources": {
+    "native/hip_bridge.c": "d90fd5467e7afe83f90cd29a7b614a5fcde53cd04138b9f1a7575960681beded",
+    "native/lmxxf_bridge.c": "9d81a8a8c8204d3f40eae2638a4bfb0fabd1dc38629031f66580c42949dd0d35",
+    "native/nr_ordered.c": "6153d213775060967fd4b53d02b2ce19b806922f7639b9a0cf0ef72a1c8014b3",
+    "experiments/lmxxf/resident_backend.cpp": "e416a1131bc785652caa7a2ec958e0374e017140a22b08c5db32ef0416aa46ef",
+    "experiments/lmxxf/resident_backend.h": "6691bd519ceb66b23840ec62622a021e8604144b53f722e7c56f1470bbf4c616",
+    "native/lmxxf_timing.h": "3eae1ebf943da039a8934fb976526dc53fcbc0ebef8d7dcb16de053343e5ce02"
+  },
+  "borrow_output": true,
+  "geometry_policy": {
+    "mode": "automatic_from_original_game_import",
+    "processing_alignment": 64,
+    "attention_max_tokens": 640,
+    "attention_tile_tokens": 16,
+    "padding": "smallest enclosing rectangle; ties prefer smaller width",
+    "prior_layouts_preserved": true
+  },
+  "residency": {
+    "idle_limit_per_device": 1,
+    "stream": "legacy default only; explicit streams retain private ownership",
+    "reuse_gate": "original final marker, successful original stream synchronize, ordered job complete",
+    "same_geometry": "weights, modules, buffers and prepared graph retained",
+    "changed_geometry": "weights and modules retained; graph and scratch rebuilt",
+    "failure": "active/failed residents never returned to cache",
+    "stats_bytes": 80
+  },
+  "direct_game_io": {
+    "enabled": true,
+    "input_stride": 3,
+    "output_stride": 4,
+    "alpha": 1,
+    "boundary_conversions": 0,
+    "removed_resident_staging_bytes_per_processing_pixel": 32,
+    "network_math": "preserved; only address/layout and alpha store changed"
+  },
+  "generated_sources": {
+    "experiments/lmxxf/build_game_io.py": "b747ed55a827f990a38a6738c456d5e195140925a673ecc76f833574d083bca9",
+    "experiments/lmxxf/game-io.generated.hip": "d722902392c74e1515bab499f888483158a0e192e75fc175145f558ec039027c",
+    "experiments/lmxxf/build_c32_attention.py": "ec521f81106f037cdf00143e67bfc6d3fedb16cea9a7c59c2546465b51e5284c",
+    "experiments/lmxxf/build_mh_attention.py": "1edf44d6f25478d34eacf3c8be2b4b6d5ea83db233b2478bfe3f8986166b6eec",
+    "experiments/lmxxf/stage3-fixed-sources/c32_fused_ffn_attention-packed.generated.hip": "3cc496d508ceacd5f138f273204ffcedec0131a0a56a2ba2c393f43bfa883faf",
+    "experiments/lmxxf/stage3-fixed-sources/multihead_fused_attention.generated.hip": "fd2b63e8fe38f98c59609b0fd343196ba475654a80ae39f9b6601d94d061c66f",
+    "experiments/lmxxf/build_vit_streaming.py": "529a5b8231763fcb90bf7914e471efaea45eb1148c818852250dd087dcbd67ff",
+    "experiments/lmxxf/build_deep_candidate.py": "76ae5b88614f68d0699a79e8b71c9e4f4ece1a0d584d819ff7156a6d6b007835",
+    "experiments/lmxxf/deep-fast.generated.hip": "7fe8692ce0a1641f55512c26e6e320b019f978ff54dea23cb6090a51f99b696c",
+    "experiments/lmxxf/stage3-fixed-sources/deep_fast-packed.generated.hip": "7c4d708650a9a006b9b5999fe0d8a6c3eb1d2d1899dd011c67c2224b92020ce2"
+  },
+  "gpu_profile": {
+    "enabled_by_default": false,
+    "warmup_frames": 120,
+    "reference_frames_before": 8,
+    "profile_frames": 8,
+    "reference_frames_after": 8,
+    "graph_event_record_flags": 1,
+    "automatic_normal_graph_restoration": true,
+    "network_math": "unchanged",
+    "report": "local kernel timing data; not FPS"
+  },
+  "attention_layout": {
+    "c32": "in-place V transpose with group-wide publication barrier",
+    "multihead": "transposed V in existing per-head storage",
+    "additional_shared_bytes": 0,
+    "network_math": "same operands and accumulation order; complete network preserved",
+    "gpu_performance": "unmeasured"
+  },
+  "compiler_build": {
+    "source": "https://rocm.nightlies.amd.com/v2/gfx120X-all/rocm_sdk_core-7.14.0a20260612-py3-none-linux_x86_64.whl",
+    "comgr_sha256": "95c3a911d8f8d7439435286e878ce0a89d91ec0fb685370e76f5bd4315ad72b9",
+    "llvm_commit": "52226beb248fcdd136d084307a12207d2fc00220",
+    "baseline_reproduction": "packed deep module reproduced byte-for-byte before applying these backports"
+  },
+  "upstream_backports": {
+    "commit": "70656f8ec1cd1019ef537f17d557cc4a46365b09",
+    "source": "hip/deep_fast.hip",
+    "source_sha256": "af3d13cc9b7370f54763603823d1f44e6e068631ac4af06b7ba826830520a896",
+    "changes": [
+      "exact streaming ViT attention",
+      "fixed-channel ViT expansion and projection",
+      "fixed-channel decoder projection with generic fallback"
+    ],
+    "legacy_kernel_abi_preserved": true,
+    "adaptive_reuse": false,
+    "new_image_geometry_support": false
+  },
+  "compact_mh_features": {
+    "enabled": true,
+    "diagonal_projection": true,
+    "extra_quantization": false,
+    "inter_block_stream": "float",
+    "full_byte_stream": false,
+    "network_blocks_skipped": []
+  },
+  "host_overhead": {
+    "resident_slots": "reused across leases without per-frame map-node allocation",
+    "success_logging": "sampled; all failures retained",
+    "network_math": "unchanged",
+    "additional_gpu_synchronization": false
+  },
+  "host_timing": {
+    "gpu_timing": false,
+    "worker_threshold_ms": 50,
+    "idle_gap_threshold_ms": 100,
+    "initial_reports": 4,
+    "subsequent_min_interval_ms": 1000,
+    "idle_gap_includes": "game scheduling, menus and producer availability",
+    "enabled_by_default": true
+  }
+}

@@ -33,10 +33,12 @@
   },
   "distribution": {
     "contains": [
-      "installer",
-      "corresponding bridge/patch source",
-      "rebuilt bridge/trampoline/vkd3d components",
-      "notices"
+      "guided installer",
+      "corresponding bridge and vkd3d patch source",
+      "verified public base components",
+      "lmxxf GPU modules and Linux host source",
+      "model converter source",
+      "license notices"
     ],
     "excludes": [
       "official setup",
@@ -47,105 +49,37 @@
     ],
     "reproducibility": "Deterministic packaging of identical inputs; no cross-toolchain binary identity claim."
   },
-  "generated_utc": "2026-09-16",
-  "installer_version": "0.3.1-linux.1",
-  "status": "Experimental public Linux integration of upstream 0.3.1; compute is the compatibility default. Bounded gameplay validates neural processing in three documented configurations, not universal support.",
-  "integration": {
-    "hip_exports": 33,
-    "hip_bridge_magic": "DLNRHIP2",
-    "ordered_abi": 3,
-    "flag_shader_offset": 436368,
-    "flag_shader_bytes": 1472,
-    "flag_shader_sha256": "0b85aab8db0ee8ba14019e32e3839bb2d321cde974371b30eb3742955b53084b",
-    "vkd3d_shader_fnv1": "135ea1f88cbc832d",
-    "graphics_wait_shaders": {
-      "pixel": "9b67a44ca79c547f",
-      "vertex": "97c89ca9f5ead0f9"
-    },
-    "linux_sync_settings": {
-      "Async": "0",
-      "SpinDraw": "0",
-      "CpuWait": "0"
-    },
-    "synchronization": "Retain original producer and final status commands; replace repeated matching compute or graphics wait slices with one ordered Linux handoff per neural job.",
-    "wait_method_selection": "Compute for new installs or absent key; updates preserve saved compute/graphics. Advanced --wait-method overrides once and persists. No crash-triggered retry.",
-    "async_supported": false,
-    "cpu_wait_enabled": false,
-    "graphics_wait_supported": true,
-    "graphics_known_failure": "007 First Light 1.2.0 loses the Vulkan device with graphics waits; the matching compute configuration succeeds.",
-    "upstream_payload_modified": false,
-    "swapchain_queue_fallback": "Opt-in DLSSNR_SWAPCHAIN_QUEUE=1; exact owned queue and normal COM reference counting.",
-    "record": "sources/README.md"
-  },
-  "validation": {
-    "python_tests": 27,
-    "candidate_build": "Corresponding installer/runtime sources passed a clean component build, native and D3D12 ASan/UBSan contracts, original upstream fixture tests and deterministic packaging before promotion.",
-    "public_package_checks": "Same runtime sources as the validated candidate; public documentation, manifest label and packaging inputs updated. Public CI gates release publication.",
-    "gameplay": {
-      "Cyberpunk 2077": "NR 0.3.1, native FSR 4.1.1, compute and graphics, FG active; bounded successful sessions.",
-      "Atomic Heart": "NR 0.3.1, OptiScaler FSR 3.1.4, compute and graphics, FG off; bounded successful sessions.",
-      "007 First Light": "NR 0.3.1, game 1.2.0, OptiScaler FSR 4.1.1, compute, FG off; graphics fails in the matching configuration."
-    },
-    "tested_environment_scope": "Limited AMD RDNA4 / Proton-CachyOS-SLR configuration; not all AMD hardware or runners.",
-    "gameplay_records": [
-      "docs/games/cyberpunk-2077.md",
-      "docs/games/007-first-light.md",
-      "docs/games/atomic-heart.md"
-    ],
-    "unverified": [
-      "Other game/GPU/runner configurations",
-      "Long-session stability and memory-leak fix",
-      "Specific upstream RE Engine fixes and FG stale-frame fix",
-      "Comparative image quality and controlled performance gain",
-      "Windows wait/performance parity",
-      "Fresh Wine weight conversion with 0.3.1 in CI"
-    ]
-  },
-  "privacy": {
-    "gameplay_logs_included": false,
-    "source_log_fingerprints_included": false,
-    "report_detail": "Public profiles retain software configuration and bounded compatibility findings; personal paths, exact device inventory, session timestamps and session-specific measurements are omitted."
-  },
   "source_hashes": {
-    ".github/FUNDING.yml": "2813eea7234708d671dbc4da09ffcb69e8b87e6e5c94cb044927b2b4097e2d7d",
-    ".github/workflows/build-release.yml": "c44d9b48483ec6cda6d30c3f5aab3f813d01a58202de82c43c43d12b86a8c1a4",
-    ".gitignore": "821c195bbf08064619d929c303ed9668edd084c4d0fba4a4b7d12001495b8189",
-    "CHANGELOG.md": "099555245db70b0a0a7ab589d602277a8c10337c633b53939a64b3a7e3e4acc4",
-    "LICENSE": "108f0cff2fcbea7ac77ca13b0952286ff303dd9b0745432860d5700b5cbc3fa3",
-    "README.md": "ce71cf8cf4394c52c75d8d9bfa55687ce622d736c69045f7363579231f27f370",
-    "THIRD-PARTY.md": "4245fd8867abc48b12ba0865af762184d07f7f82b17a94f3ff73cc73a00011da",
-    "assets/manifest.json": "42c96029baf93b6325db7e35bfe97819da766596bba01a39d850055a34384e89",
-    "build_release.py": "1f41890e271bf500fa6a77fc1f80f217618d3c219e00a4db71c2eddd3db75eef",
+    ".github/workflows/build-release.yml": "d909c5074816fd9e13f3b083cd0819b261ee08ca71e26eb01fd6d7b21aa73c07",
+    "CHANGELOG.md": "b1c88d837a6a1ac7904ef679e8df5fd67dfca4116dbf15e853556adfc1faac3f",
+    "README.md": "8360931541422b6d39854e5eb7bbd90d3bd4a100fd3c54cba8ff92423585c17c",
+    "THIRD-PARTY.md": "bd1d704bdfbf6ab5fc050dce093b46c6eafce34b3f610f3ec6c582febef50c3e",
+    "assets/manifest.json": "e13e8af1129283d16b900e06cab214273a977fbfe6557e1d08e9c653f300c89a",
+    "build_release.py": "681514dc17c7d45d0e8edb6ed8b86a907b46ae94c00d68eb8a1e2547cc50b897",
     "dlssnr/assets.py": "be5b29a3079ab6585259a7b34d660b593dbb6bf8b8075387df53b715335a745e",
-    "dlssnr/cli.py": "415c0764d40aeb1a64d8868583b4376cb1418464d5d7e33416b02118a3759ef6",
-    "dlssnr/conversion.py": "3d93e49307b8b6f108b9e5bff142a12fccfcf9c2b4b58ffc877d8a3a8dc396db",
+    "dlssnr/cli.py": "801bf24a3973e8441e70596d7ede3c0acc3ea5684521c45ee79cbfd98e14711f",
     "dlssnr/deploy.py": "75c8ceca546876dc640f9825ec04e16e65400a8e87165b6f6b184675153f3a6a",
-    "dlssnr/games.py": "b7373b7d6ab5210aa989acdec42f99def5e3060edaaffccb5da4016272fd9890",
-    "dlssnr/runtime.py": "73adb86ae8605ea3dc35a6c47fd5e5811f5448ac466eeede601ad0970e0b52b7",
+    "dlssnr/lmxxf.py": "c29e9e7cb5654b7c463900e7d846183ddf4e2386af722908b23a1b85e8abed16",
+    "dlssnr/numpy-wheels.json": "73bdeb161cacf38d497d1022269345f97a14188ca9f814933415de56bcbf5485",
     "dlssnr/upstream.py": "292b4b10d8aeb24f593d94d3ce672e6cb1490142321771f232078cfab3f90a7c",
-    "docs/INSTALL.md": "e82261dae1b00c4c5f6b1836db0ba548fa097cacfee0780752c480f627e5b348",
-    "docs/PRIVACY.md": "cbfe4bcecb8f2264c4bd0624aa2d2447edd8536ea531a349778dc4e203feb555",
-    "docs/TROUBLESHOOTING.md": "72dfeaa86f7568f75f6baed571f1b432bf503dfe5c9d51345949fffe33213179",
-    "docs/games/007-first-light.md": "672feeaecc651534763aba04046db0c183c5e24e0a2a48eb63537ef40f3602e9",
-    "docs/games/atomic-heart.md": "ec6a8ed39d7d020391f5bb31382886c4e07b7412bc94140d07bac9e5d8741871",
-    "docs/games/cyberpunk-2077.md": "746215a355a37e89539a6abdcd45d73ca69b7dd84d15367ec54a30a152da0c72",
-    "install.sh": "f86c0901b0167dc2b8658dc7484280a20f02b81b46fbc0bb51924da11ff7515d",
-    "installer.py": "9df57c39833908bf2ca418dc377359000191bcb5ebd89fc7c2752d069b043b96",
-    "licenses/PROJECT-MIT.txt": "25b4389b9af6a59a3a9e78177860e26cc690325d8655db0e89969dbf378f3cd0",
-    "licenses/vkd3d-dependency-notices.txt": "eddc7f35a4e6d79d69901edeb523ef2aae3dff3091aafa38cf9cf5f44ad8c6e0",
-    "licenses/vkd3d-proton-AUTHORS": "825ecce7c240aa4824cd80f27640cba19c74f7187b1ecdf8c1a2645ddb4d30c3",
-    "licenses/vkd3d-proton-COPYING": "f51ad4bf5a3bd2b5f383fe28150b23d01e6f5d7b620b194150e7c6a620c43c1f",
-    "licenses/vkd3d-proton-LICENSE": "dc626520dcd53a22f727af3ee42c770e56c97a64fe3adb063799d8ab032fe551",
-    "native/hip_bridge.c": "730e86d91f722022590dae6a00e78ada323fcaf1247c035b35da5abff96c0983",
+    "docs/INSTALL.md": "53bb5ef5d86772d0c9a3a3f52f6995821e84e9efa96d14543c8bacfa1f58ec0d",
+    "docs/TROUBLESHOOTING.md": "48b0aba1f68008b8186d6b5e1d124a80f8dc83a8a78f6a115b282946c91b6865",
+    "docs/games/007-first-light.md": "e6af586e137a1332b0b97f595ab832e69e3927061db9ae691dc5585e137d1089",
+    "docs/games/atomic-heart.md": "1fb64a773375d647575bd4ee5c1fcadb73ec0e651194f14ca6373a79055b091b",
+    "docs/games/cyberpunk-2077.md": "83d62e580b15471426ca65bb11f7af0bcad798dc7bef154303114b0f2b58a006",
+    "experiments/lmxxf/README.md": "0abbc907d903a918840b94fde04e68db64e30150ba5a0ac299c18e7cb366eab3",
+    "experiments/lmxxf/convert_weights.py": "8517a9d5592e2000b18522bf79a2480df5a78512514177a4ee4df3998f0597d3",
+    "experiments/lmxxf/layout-recovery.json": "8efbd1654e1628be99873e00ad4eaa2e805a011dc318227d4b1c5bf5f7ecb833",
+    "native/active_c32.c": "79713497df681d734790e1c9d3cd7742d48485ceaa028f209d10b326915d77b4",
+    "native/c32_offsets.inc": "3ca58caeb42bd2f58c8c511261e7fb81a557f85ed36fd54747c34b5a75cdb60b",
+    "native/c32_prepack.c": "eff030802eceba4436666bb81f58df4066c4e3b78f6fd313d45e7c79a3408bb2",
+    "native/hip_bridge.c": "9f4ae9a3ea914000fed1d1da2657c31a54dbb17fad7b7acc8abbdb366f4b4fd3",
     "native/hip_bridge.h": "1282555fe402da8c6ff0205da32a7d25a7ffe42f8e6bd1a6533e2c6fdd4b359a",
     "native/hip_probe.c": "8aaeba487b93f3e56e653bdf8615f04022e655e3d074423b07797d43eba5c63e",
     "native/hip_probe_kernel32.def": "93603eeea79eae5bc6ee8fd79912ca0146ddd3865d27bf148ef9f75c391fe892",
     "native/nr_ordered.c": "2851ca083f7f9b7e8c5561855472c42df8eeead417a4e22c67a8dedab292dd7f",
     "native/nr_ordered.h": "0740adedd030bfb97e3146a4060b0ba9aeb163389f0590edfb923e0ca515437d",
-    "scripts/build-components.sh": "6e0737d3b3286bf1f54470198d3225cb18df138acface5628e43e8e421c67db8",
-    "scripts/fetch-toolchain.py": "56a066c256fa62ab5509717145ba1be68426bfbcafd42dab16b41652c6e97456",
-    "scripts/publish-release.sh": "6a221cbdcb488f88870a22b3d0ac20e7d4bc93d1536329184cfafa4d946d5f82",
-    "sources/README.md": "b544f584808e8fa49be1db4f4cbfc68cc1b71efff34300105037325b022cdab7",
+    "sources/README.md": "9c24934287a6669385828466277a132a637a48870c7e38cbc88ce5fa84c457a5",
     "sources/cross-win64.ini": "5a1c6f19cea810e48c37fe5dc6b82850a166ac79877914c7cb845ce22730aa94",
     "sources/fetch_vkd3d.py": "e4dd8bf7a8712e2a6fd08853093be8bf7a83dfb6417b96bce4791cba27819c7a",
     "sources/trampoline/amdhip64_7_pe.c": "1fef657500378fa326f4f4cb02aaddcc8cbf7d19c5ce4069892bc6409e2a5224",
@@ -154,14 +88,59 @@
     "sources/trampoline/ntdll.def": "4347c80c0ead0e117bc0b6651d14dcc34cac5304028e8a2b9f634d724523ac5f",
     "sources/vkd3d-proton-ordered.patch": "def1957ff84a9bfc32ad78bd32493ce686c65f8f757d5ef8d1fc7e679ba389f6",
     "sources/vkd3d-submodules.json": "bf2e242a72f71c4562e894af8cf9db2be2302a498e2d542bf0b433181a2f7325",
-    "stage_upstream.py": "5bc1849c4e4d8f23e778a970b271cffe09d0ac25938ba38be8128e8363aedaff",
+    "stage_upstream.py": "3683767c132ed81392f6b9cf5e24fa75964ce776371f6a3729fc74f7b0eb2e18",
     "tests/native_contract.c": "ba7f6c12207b0707207afbd1aea72e8ff24c5db17d61f8b4b92844737d93dbb5",
     "tests/swapchain_queue_contract.c": "42ab3030cc38c6123f7df47b49c420bf648df355ee670fab2de33ce4f8589949",
-    "tests/test_integration.py": "07b2b4cda362f53001fb74ca1601a02d7baab4f3c37930d6927fa0ce4ef9d9d3",
-    "tests/test_runners.py": "f5c48b6c50624ca2d45f9c29df4abe8311bf92869f9f97da746b3020a99be57f",
+    "tests/test_integration.py": "0d46d78f11fc0e724522b5fbddebd047f61d7259864f2624f5821a78123069bd",
     "tests/test_swapchain_queue.py": "fba2fe1ea81417fd8caad3b4efbc22fcc40c9f28911a3c750e0f4fda76dcabdb",
     "tests/test_upstream_031.py": "87359b9eb214c152cad6cee2d9c782e496507519d352d4f9a350ed8496234b97",
     "tests/upstream_recording_contract.c": "94d0a6492a9c320f0d40b147ab261545a48f63c698a17f885fd34a463f27b2cf",
-    "tests/vkd3d_ordered_contract.c": "ce0775d5cc175382d6ff5677dbac48bb257533f5197bec6e40151713cc5f1f95"
+    "tests/vkd3d_ordered_contract.c": "ce0775d5cc175382d6ff5677dbac48bb257533f5197bec6e40151713cc5f1f95",
+    "scripts/publish-release.sh": "49543d1808d13b54866e8047a23812d156fca6c67775219e636dccd88b070ff3"
+  },
+  "installer_version": "0.31.1-lmxxf",
+  "status": "Experimental community implementation; public release.",
+  "integration": {
+    "hip_exports": 33,
+    "hip_bridge_magic": "DLNRHIP2",
+    "ordered_abi": 3,
+    "flag_shader_offset": 436368,
+    "flag_shader_bytes": 1472,
+    "flag_shader_sha256": "0b85aab8db0ee8ba14019e32e3839bb2d321cde974371b30eb3742955b53084b",
+    "vkd3d_shader_fnv1": "135ea1f88cbc832d",
+    "root_parameters": [
+      "UAV flags",
+      "4 constants",
+      "UAV abortw"
+    ],
+    "linux_sync_settings": {
+      "Async": "0",
+      "SpinDraw": "0",
+      "CpuWait": "0"
+    },
+    "upstream_graphics_wait_supported": true,
+    "async_supported": false,
+    "graphics_wait_shaders": {
+      "pixel": "9b67a44ca79c547f",
+      "vertex": "97c89ca9f5ead0f9"
+    }
+  },
+  "base_components": {
+    "release": "v0.3.1-linux.1",
+    "repository": "https://github.com/bulacha3/DLSS-NR-on-AMD-Linux",
+    "archive_sha256": "9aa69e52d9e772cd4c4728562a020454f7d39e9bda65d8d7bd148ad477d6aa79",
+    "files": {
+      "amdhip64_7.dll": "6300ab93a92e0e711b43a262e3858be90980dc396ca67d5edc39c45516ab2e62",
+      "d3d12.dll": "287b7ee5c383d8ee5755536eaeb9a9e91c1e6b6b8c49bbad90255ef96f53e14c",
+      "d3d12core.dll": "9e0ff23924f1666c79409a5f0383e27c325761f6996b3ff75ea10b002ebd3ca8",
+      "libdlssnr_hip_bridge.so": "5acc58930c3e921a3fd4645e511a5d39310ac0f1e620477f2330ed26b1597ed0"
+    },
+    "role": "Reference release for the base components. Packaging records the actual supplied component hashes separately."
+  },
+  "optimized_backend": {
+    "revision": 13,
+    "gpu_modules": "Identified by the backend package manifest and runtime build record.",
+    "host_compilation": "performed locally during installation",
+    "build_record": "experiments/lmxxf/stage4/runtime/build.json"
   }
 }

@@ -19,12 +19,3 @@ __pycache__/
 .venv/
 *.log
 .env
-.env.*
-*.dmp
-*.mdmp
-*.dump
-/logs/
-/upload/
-/dlssnr_on_amd.ini
-/OptiScaler.ini
-/dlssnr_on_amd_config.ini

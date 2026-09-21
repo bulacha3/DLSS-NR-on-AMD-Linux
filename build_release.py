@@ -15,16 +15,12 @@ ARCHIVE_ROOT = 'dlssnr-linux-portable'
 PACKAGE_FILES = (
     'installer.py', 'install.sh', 'stage_upstream.py', 'build_release.py',
     'README.md', 'CHANGELOG.md', 'THIRD-PARTY.md', 'PROVENANCE.json', 'LICENSE',
-    'docs/INSTALL.md', 'docs/TROUBLESHOOTING.md', 'docs/PRIVACY.md',
-    'docs/games/cyberpunk-2077.md',
-    'docs/games/007-first-light.md',
-    'docs/games/atomic-heart.md',
-    'dlssnr/assets.py', 'dlssnr/cli.py', 'dlssnr/conversion.py',
+    'docs/TROUBLESHOOTING.md', 'docs/INSTALL.md',
+    'docs/games/cyberpunk-2077.md', 'docs/games/007-first-light.md', 'docs/games/atomic-heart.md',
+    'dlssnr/assets.py', 'dlssnr/cli.py', 'dlssnr/conversion.py', 'dlssnr/lmxxf.py', 'dlssnr/numpy-wheels.json',
     'dlssnr/deploy.py', 'dlssnr/games.py', 'dlssnr/runtime.py', 'dlssnr/upstream.py',
     'native/hip_bridge.c', 'native/hip_bridge.h', 'native/nr_ordered.c', 'native/nr_ordered.h',
-    'tests/native_contract.c', 'tests/vkd3d_ordered_contract.c',
-    'tests/swapchain_queue_contract.c', 'tests/test_swapchain_queue.py',
-    'tests/upstream_recording_contract.c', 'tests/test_upstream_031.py',
+    'native/c32_prepack.c', 'native/c32_offsets.inc', 'native/active_c32.c',
     'sources/README.md', 'sources/fetch_vkd3d.py', 'sources/cross-win64.ini',
     'sources/vkd3d-submodules.json', 'sources/vkd3d-proton-ordered.patch',
     'sources/trampoline/amdhip64_7_pe.c', 'sources/trampoline/hip_bridge.h',
@@ -33,6 +29,9 @@ PACKAGE_FILES = (
     'licenses/PROJECT-MIT.txt', 'licenses/vkd3d-proton-LICENSE',
     'licenses/vkd3d-proton-COPYING', 'licenses/vkd3d-proton-AUTHORS',
     'licenses/vkd3d-dependency-notices.txt',
+    'experiments/lmxxf/convert_weights.py', 'experiments/lmxxf/weight_assets.py',
+    'experiments/lmxxf/weight-records.json', 'experiments/lmxxf/layout-recovery.json',
+    'experiments/lmxxf/LICENSE.upstream', 'experiments/lmxxf/WEIGHTS.md',
 )
 
 
@@ -70,11 +69,42 @@ def build_release(root, output_dir=None, components_root=None):
     root = Path(root).resolve(strict=True)
     generated = validate_components(components_root or root / 'build/components')
     content = {name: regular(root / name, root) for name in PACKAGE_FILES}
+    # Include the independently verified candidate allowlist only: never models,
+    # local reports or developer build directories.
+    candidate = root / 'experiments/lmxxf/stage4'
+    candidate_manifest = json.loads(regular(candidate/'package.json', root))
+    if candidate_manifest.get('format') != 'lmxxf-stage4-package-v1' or not candidate_manifest.get('files'):
+        raise ValueError('Missing bundled backend manifest')
+    for name, digest in candidate_manifest['files'].items():
+        relative = Path(name)
+        if relative.is_absolute() or '..' in relative.parts:
+            raise ValueError('Invalid backend package path')
+        data = regular(candidate/relative, root)
+        if hashlib.sha256(data).hexdigest() != digest:
+            raise ValueError('Modified backend package file: '+name)
+        content[str((candidate/relative).relative_to(root))] = data
+    content[str((candidate/'package.json').relative_to(root))] = regular(candidate/'package.json', root)
     manifest = json.loads((root / 'assets/manifest.json').read_text())
     # Hash actual build outputs. Different compilers need not produce identical DLLs.
     manifest['files'] = {name: hashlib.sha256(data).hexdigest() for name, data in generated.items()}
     content['assets/manifest.json'] = (json.dumps(manifest, indent=2) + '\n').encode()
     content.update({'assets/' + name: data for name, data in generated.items()})
+    provenance = json.loads(content['PROVENANCE.json'])
+    reference = provenance.get('base_components', {})
+    provenance['packaged_components'] = {
+        'files': manifest['files'],
+        'matches_reference_release': manifest['files'] == reference.get('files'),
+        'reference_release': reference.get('release'),
+    }
+    provenance['source_hashes'] = {
+        name: hashlib.sha256(content[name]).hexdigest()
+        for name in provenance.get('source_hashes', {}) if name in content
+    }
+    provenance['packaged_file_sha256'] = {
+        name: hashlib.sha256(data).hexdigest()
+        for name, data in sorted(content.items()) if name != 'PROVENANCE.json'
+    }
+    content['PROVENANCE.json'] = (json.dumps(provenance, indent=2) + '\n').encode()
     destination = Path(output_dir or root / 'dist')
     destination.mkdir(parents=True, exist_ok=True)
     archive = destination / (ARCHIVE_ROOT + '.tar.gz')

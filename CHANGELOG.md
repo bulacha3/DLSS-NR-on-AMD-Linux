@@ -1,24 +1,39 @@
-# 0.3.1 Linux — Experimental
+# Release notes
 
-Linux integration of [DLSS-NR on AMD Alpha 0.3.1](https://github.com/danielblnc/DLSS-NR-on-AMD/releases/tag/v0.3.1). Package version: **0.3.1-linux.1**.
+## 0.31.1-lmxxf
 
-## Changes
+### Changes
 
-- Uses the original upstream 0.3.1 runtime, including its announced frame-generation, RE Engine and memory-leak fixes.
-- Adds support for upstream's graphics wait commands. **Compute remains the Linux default** for compatibility; no extra installer argument is needed.
-- Preserves visual settings, original backups and the saved wait method when updating.
-- Updates the installation and game guides for Cyberpunk 2077, Atomic Heart and 007 First Light.
+- Add the lmxxf HIP backend while retaining the complete neural network.
+- Optimize attention, remove redundant conversions and reuse GPU resources across frames.
+- Reduce CPU allocation and logging overhead; record slow jobs automatically.
+- Guide installation and updates through launcher, game, Proton and upscaler selection.
+- Prepare model data automatically, reuse it across games and preserve launch options.
 
-## Known limits
+### Performance
 
-- Graphics waits crash the tested 007 First Light 1.2.0 configuration. Compute works in that configuration and is selected automatically for new installs. An older installation that saved graphics needs a [one-time switch](https://github.com/bulacha3/DLSS-NR-on-AMD-Linux/blob/main/docs/TROUBLESHOOTING.md#007-crashes-immediately-with-graphics-waits).
-- Successful gameplay in these three games is not universal compatibility. There is no verified FPS gain or Windows performance parity.
-- The upstream RE Engine fixes, specific frame-generation bug and memory-leak fix have not been independently reproduced and validated here.
+| Game | Previous Linux release | 0.31.1-lmxxf | Average FPS change |
+| --- | ---: | ---: | ---: |
+| Cyberpunk 2077 | 41.16 FPS | 46.61 FPS | +13.2% |
 
-## Download and update
+Built-in benchmark versus `v0.3.1-linux.1`, with Balanced FSR, RT Ultra and
+frame generation enabled in both runs. This is a single comparison, not a
+guarantee for other games or configurations.
 
-Download **`dlssnr-linux-portable.tar.gz`** and **`dlssnr-linux-portable.tar.gz.sha256`** below. Verify, extract and run `./install.sh` with the game closed. GitHub's **Source code** archives require building first.
+### Compatibility
 
-The package contains the Linux bridge, installer and corresponding source. Supply your own `nvngx_dlssnr.dll` 310.8.0.0 or converted weights; no NVIDIA files, weights or game logs are included.
+This release has been checked in Cyberpunk 2077. The 007 First Light
+and Atomic Heart setup profiles are retained from earlier validation; no new
+performance result is claimed for them.
 
-[Installation](https://github.com/bulacha3/DLSS-NR-on-AMD-Linux#install) · [Game profiles](https://github.com/bulacha3/DLSS-NR-on-AMD-Linux#tested-games)
+The optimized backend currently targets `gfx1201`. Other GPUs supported by the
+installer retain the original backend. Python 3.11+, gcc/g++ and HIP 7 are required.
+NVIDIA model data is not included. This remains experimental software.
+
+### Install or update
+
+Close the game, extract the portable package and run `./install.sh`. Follow the
+guided steps and copy the final launch instructions. Existing model data,
+visual settings and original-file backups are retained.
+
+[Installation guide](docs/INSTALL.md) · [Earlier releases](https://github.com/bulacha3/DLSS-NR-on-AMD-Linux/releases)

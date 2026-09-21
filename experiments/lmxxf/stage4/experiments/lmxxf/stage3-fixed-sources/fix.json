@@ -1,0 +1,27 @@
+{
+  "format": "lmxxf-lds-order-fix-v1",
+  "upstream_commit": "90abf6a2d3e3b08136ab56de0c658d830b327865",
+  "target": "gfx1201",
+  "GPU_validated": false,
+  "source_diagnostic_sha256": "5a7f08fd5f80fe2f05c36931ff5de4178ce23e9a30588ba9fbabfdbc8b33bb11",
+  "first_divergent_kernel": "mh_ffn_fused_c64_project_g128_qkv",
+  "modules": [
+    {
+      "name": "deep_fast-packed",
+      "sha256": "b0eff8a1d51f89753b38b3f1a42c71cc7541cbcdf257d6b2e634eb390e12be1f",
+      "size": 368832,
+      "barriers_strengthened": 14,
+      "original_sha256": "0d8cd8fc5cdc97bb78a2196020d5e6f29ec2794e813541f6d0fb949afac59231",
+      "source_sha256": "7c4d708650a9a006b9b5999fe0d8a6c3eb1d2d1899dd011c67c2224b92020ce2"
+    },
+    {
+      "name": "multihead-fast-padded-wave-packed",
+      "sha256": "703903da30c6ff0599f16e191ce10f34374459f257f7b1e8393560082cce2018",
+      "size": 768056,
+      "barriers_strengthened": 25,
+      "original_sha256": "fdcfb15e381df9a09924971a136193ade75098f9d77d77ac341350d9fdc5ed63",
+      "source_sha256": "d2be74ca522c7e9ee6d6ddc07db532248c42731b96f425f0fe315f81135bd09f"
+    }
+  ],
+  "patch_sha256": "25928bf66bbb2769cacb4e03a37ed8b200ba474836e125bb78d0f8a36cb68c73"
+}

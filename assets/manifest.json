@@ -1,5 +1,5 @@
 {
-  "version": "0.3.1-linux.1",
+  "version": "0.31.1-lmxxf",
   "mod_version": "0.3.1",
   "files": {},
   "files_note": "Filled by build_release.py from validated build outputs; source checkouts contain no binaries.",
@@ -17,7 +17,7 @@
   "hip_bridge_abi": 2,
   "ordered_abi": 3,
   "flag_shader_hash": "135ea1f88cbc832d",
-  "runtime_status": "Experimental Linux integration of upstream 0.3.1; compute is the default; bounded gameplay validation in Cyberpunk 2077, Atomic Heart and 007 First Light; graphics has a known 007 startup failure",
+  "runtime_status": "Experimental Daniel 0.3.1 integration; compute is the new-install default; updates preserve the selected synchronization method.",
   "distribution": "Bridge binaries and corresponding source; upstream runtime downloaded and staged only on the user machine",
   "linux_sync_settings": {
     "Async": "0",

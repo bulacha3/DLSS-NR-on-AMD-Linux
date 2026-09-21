@@ -1,59 +1,54 @@
 # Installation
 
-Use Linux x86_64 and Python 3.10 or later. The game must already launch in DirectX 12 through Wine/Proton. Keep its working runner and prefix. Run the installer as your normal user.
-
-Download the portable package from the [README](../README.md). Source archives need [built components](../sources/README.md) first.
-
-## Executable and runner
-
-Run `./install.sh` for the wizard, or specify the executable:
+The game must already work in DirectX 12 through Wine/Proton. Close it, extract
+the portable package into a new folder, and open a terminal beside `install.sh`:
 
 ```sh
-./install.sh install --exe '/path/to/Game/Game.exe'
+./install.sh
 ```
 
-Quote paths containing spaces. Select the actual game executable, not a launcher:
+The same guided flow handles installation and updates:
 
-| Game | Executable relative to the game folder |
-| --- | --- |
-| Cyberpunk 2077 | `bin/x64/Cyberpunk2077.exe` |
-| 007 First Light | `Retail/007FirstLight.exe` |
-| Atomic Heart | `AtomicHeart/Binaries/Win64/AtomicHeart-Win64-Shipping.exe` |
+1. **Launcher:** choose Steam or another launcher. A non-Steam shortcut launched
+   from Steam uses the Steam option.
+2. **Game:** select an installed Steam game, or paste its folder or Windows x64
+   executable path. Quoted paths and spaces are accepted. If several executables
+   are listed, select the game itself.
+3. **Wine/Proton:** select the runner already configured for this game. Steam
+   runners are listed automatically. For another launcher, paste its runner
+   folder; type `steam` here if you want to list Steam runners. Confirm the choice.
+   This installer does not change your launcher's runner selection.
+4. **Upscaling:** choose native FSR 3/4 or an existing OptiScaler setup using DLSS
+   input and an FSR 3/4 backend. If unsure, stop and check the game's setup guide.
+   OptiScaler is not installed or configured by this choice.
+5. **Launch configuration:** follow the instructions for the selected launcher
+   below. Existing model data is reused; a fresh installation asks for your own
+   supported `nvngx_dlssnr.dll` and prepares the models automatically.
 
-Enter `steam` at the runner prompt to list compatible runners, including system-installed Proton variants. Choose the one configured for this game. At confirmation, `n` selects another and `q` cancels. This does not change Steam's runner selection.
+## Steam
 
-Some games embed FSR in the executable. Missing filename evidence does not identify the FSR version or establish compatibility. Check the [game profiles](../README.md#tested-games) before confirming that route.
+Open **Library > right-click the game > Properties > General > Launch Options**.
+In the installer, choose to keep previously saved options, paste the current
+field, or explicitly confirm that the field is empty. Paste the field's full
+text, not the word `steam` or a Proton name.
 
-## Runtime and weights
+After installation, replace Steam's Launch Options field with the complete line
+printed by the installer. It includes `%command%` and preserves the options you
+supplied, including OptiScaler, HDR and game arguments.
 
-The installer checks HIP and can offer a local runtime download. It also downloads and verifies the original upstream 0.3.1 setup, approximately 8 MB.
+## Other launchers
 
-Supply your own **`nvngx_dlssnr.dll` 310.8.0.0**, or converted `DLSSNRW1` weights. You can keep the DLL outside the game folder. Ordinary `nvngx_dlss.dll` is a different component.
+Use the printed **command prefix** in your launcher. Keep the existing runner,
+Wine prefix, environment variables and game arguments. Do not add `%command%`;
+that token belongs to Steam.
 
-Already downloaded the original setup?
+## In the game
 
-```sh
-./install.sh install --exe '/path/to/Game/Game.exe' --setup '/path/to/dlssnr_on_amd_setup.exe'
-```
+For native FSR, select FSR 3/4. With OptiScaler, select DLSS input and keep its
+FSR 3/4 backend enabled. **End** opens DLSS-NR; **Insert** opens OptiScaler.
+Choose your preferred Quality or Balanced mode.
 
-## Launch and configure
-
-Paste the printed command into Steam's **Properties → General → Launch Options**, retaining relevant existing options. Keep `%command%` where shown. For other launchers, use the printed command prefix with the existing runner, prefix and arguments; `%command%` is Steam-specific.
-
-Follow the game's profile. With OptiScaler, **DLSS input in the game** can feed an **FSR 3.1 output backend**. **End** opens NR; **Insert** opens OptiScaler.
-
-New installations enable `PreUpscale=1`. Compute synchronization is selected automatically (`SpinDraw=0`); no extra wait-method argument is needed. Updates preserve visual settings and the saved wait method. `Async=0` and `CpuWait=0` are enforced for this Linux bridge.
-
-For an existing experimental installation that saved graphics waits, select compute once with `./install.sh install --exe "/path/to/Game/Game.exe" --wait-method compute`. That choice stays saved for the game. Graphics is an advanced opt-in with a known startup failure in 007 First Light 1.2.0.
-
-## Update, uninstall and diagnose
-
-Close the game and rerun the new installer for that game. Updating one game's installation does not update another's.
-
-Run `./install.sh uninstall` to remove the integration, then remove its launch options. Retain original-file backups if a conflict is reported.
-
-```sh
-./install.sh doctor --exe '/path/to/Game/Game.exe'
-```
-
-On-disk verification does not confirm in-game neural processing. See [troubleshooting](TROUBLESHOOTING.md) and [diagnostic privacy](PRIVACY.md).
+Install separately for each game. Updates retain visual settings and original
+backups. To remove the integration, run `./install.sh uninstall` and remove its
+launcher command. See the [game profiles](../README.md#game-profiles) and
+[troubleshooting](TROUBLESHOOTING.md).

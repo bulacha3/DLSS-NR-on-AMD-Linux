@@ -157,81 +157,104 @@ class IntegrationTests(unittest.TestCase):
 
 class DetectionTests(unittest.TestCase):
     def run_detection(self, options=(), *, command='install', detected=False,
-                      interactive=False, answer='', dx12=True, anti=()):
+                      interactive=False, answers=(), dx12=True, anti=()):
         evidence = {'exe': Path('/example/Game.exe'), 'dx12': dx12,
                     'fsr_evidence': ['amd_fidelityfx_upscaler_dx12.dll'] if detected else [],
                     'anti_cheat_evidence': list(anti), 'version_loader': True}
         output, error = io.StringIO(), io.StringIO()
+        supplied = iter(answers)
+        def answer(question):
+            try:
+                return next(supplied)
+            except StopIteration:
+                self.fail('Unexpected prompt: ' + question)
         with ExitStack() as stack:
             stack.enter_context(redirect_stdout(output))
             stack.enter_context(redirect_stderr(error))
             stack.enter_context(patch.object(cli.sys.stdin, 'isatty', return_value=interactive))
-            prompt = stack.enter_context(patch('builtins.input', return_value=answer))
+            prompt = stack.enter_context(patch('builtins.input', side_effect=answer))
             stack.enter_context(patch.object(assets, 'verify_assets', return_value={}))
             stack.enter_context(patch.object(assets, 'require_deployable'))
             stack.enter_context(patch.object(cli, 'check_host', return_value={}))
             stack.enter_context(patch.object(cli, 'resolve_exe', return_value=evidence['exe']))
             stack.enter_context(patch.object(games, 'inspect_game', return_value=evidence))
-            runner = stack.enter_context(patch.object(cli, 'resolve_proton'))
-            if command == 'doctor':
-                runner.return_value = {'root': '/example/Proton'}
-            else:
-                # Stop at the next user-facing step; no Wine or GPU is needed.
-                runner.side_effect = RuntimeError('Runner selection reached')
+            runner = stack.enter_context(patch.object(cli, 'resolve_proton',
+                return_value={'root': '/example/Proton'}))
+            # Runner selection now precedes the FSR route. Stop only after
+            # detection and confirmation gates, before runtime preparation.
+            runtime = stack.enter_context(patch.object(cli, 'ensure_runtime',
+                side_effect=RuntimeError('Runtime selection reached')))
+            stack.enter_context(patch.object(cli, 'update_existing_candidate', return_value=None))
+            stack.enter_context(patch.object(deploy, 'running_game', return_value=False))
             stack.enter_context(patch.object(cli, 'readonly_runtime', return_value={
                 'library': '/example/hip.so',
                 'devices': [{'index': 0, 'name': 'test GPU', 'arch': 'gfx1201'}]}))
             download = stack.enter_context(patch.object(upstream, 'prepared_package',
                 side_effect=AssertionError('Game detection must not download or stage the runtime')))
-            result = cli.main([command, '--exe', str(evidence['exe']), *options])
+            install = stack.enter_context(patch.object(deploy, 'install_game',
+                side_effect=AssertionError('Game detection must not install files')))
+            flags = ['--accept-risk', '--confirm-runner'] if command == 'install' else []
+            result = cli.main([command, '--exe', str(evidence['exe']), *flags, *options])
             download.assert_not_called()
-        return result, output.getvalue(), error.getvalue(), evidence, runner, prompt
+            install.assert_not_called()
+        self.assertEqual(list(supplied), [], 'The expected prompts were not reached')
+        return result, output.getvalue(), error.getvalue(), evidence, runner, prompt, runtime
 
     def test_missing_fsr_needs_its_own_confirmation(self):
-        result, _, error, _, runner, prompt = self.run_detection(
-            ['--accept-risk', '--confirm-runner', '--allow-unconfirmed-loader'])
+        result, _, error, _, runner, prompt, runtime = self.run_detection(
+            ['--allow-unconfirmed-loader'])
         self.assertEqual(result, 2)
         self.assertIn('--confirm-fsr', error)
-        runner.assert_not_called()
+        runner.assert_called_once()
+        runtime.assert_not_called()
         prompt.assert_not_called()
 
     def test_embedded_fsr_confirmation_reaches_next_step(self):
-        for options, interactive, answer, detected in (
-                (['--confirm-fsr'], False, '', False),
-                ([], True, 'y', False),
-                ([], False, '', True)):
+        for options, interactive, answers, detected in (
+                (['--confirm-fsr'], False, (), False),
+                ([], True, ('1', '1'), False),
+                ([], True, ('1', '2'), False),
+                ([], False, (), True)):
             with self.subTest(options=options, interactive=interactive, detected=detected):
-                result, _, error, evidence, runner, _ = self.run_detection(
-                    options, interactive=interactive, answer=answer, detected=detected)
+                result, _, error, evidence, runner, _, runtime = self.run_detection(
+                    options, interactive=interactive, answers=answers, detected=detected)
                 self.assertEqual(result, 2)
-                self.assertIn('Runner selection reached', error)
+                self.assertIn('Runtime selection reached', error)
                 runner.assert_called_once()
+                runtime.assert_called_once()
                 self.assertEqual(bool(evidence['fsr_evidence']), detected)
                 self.assertEqual(evidence['fsr_confirmed_by_user'], not detected)
 
     def test_declined_fsr_confirmation_stops_installation(self):
-        for answer in ('', 'n'):
-            with self.subTest(answer=answer):
-                result, _, error, _, runner, prompt = self.run_detection(
-                    interactive=True, answer=answer)
-                self.assertEqual(result, 2)
-                self.assertIn('--confirm-fsr', error)
-                runner.assert_not_called()
-                prompt.assert_called_once()
+        for answers in (('1', ''), ('1', '3'), ('1', 'n', '3')):
+            with self.subTest(answers=answers):
+                result, output, error, _, runner, prompt, runtime = self.run_detection(
+                    interactive=True, answers=answers)
+                self.assertEqual(result, 130)
+                self.assertIn('Upscaling', output)
+                if answers[-1] == '':
+                    self.assertIn('cancel', output.casefold())
+                else:
+                    self.assertIn('upscaler route', output)
+                self.assertEqual(error, '')
+                runner.assert_called_once()
+                runtime.assert_not_called()
+                self.assertEqual(prompt.call_count, len(answers))
 
     def test_fsr_confirmation_preserves_other_requirements(self):
         for dx12, anti, message in ((False, (), 'DirectX 12'),
                                    (True, ('EasyAntiCheat',), 'Anti-cheat detected')):
             with self.subTest(dx12=dx12, anti=anti):
-                result, _, error, _, runner, prompt = self.run_detection(
-                    ['--confirm-fsr'], interactive=True, answer='y', dx12=dx12, anti=anti)
+                result, _, error, _, runner, prompt, runtime = self.run_detection(
+                    ['--confirm-fsr'], interactive=True, answers=('1',), dx12=dx12, anti=anti)
                 self.assertEqual(result, 2)
                 self.assertIn(message, error)
                 runner.assert_not_called()
-                prompt.assert_not_called()
+                runtime.assert_not_called()
+                prompt.assert_called_once()
 
     def test_doctor_reports_unknown_fsr_without_requesting_confirmation(self):
-        result, output, error, _, runner, prompt = self.run_detection(['--json'], command='doctor')
+        result, output, error, _, runner, prompt, runtime = self.run_detection(['--json'], command='doctor')
         self.assertEqual(result, 0, error)
         report = json.loads(output)
         self.assertEqual(report['game']['fsr_evidence'], [])
@@ -239,6 +262,7 @@ class DetectionTests(unittest.TestCase):
         self.assertFalse(report['gameplay_verified'])
         self.assertTrue(any('FSR was not detected' in warning for warning in report['warnings']))
         runner.assert_called_once()
+        runtime.assert_not_called()
         prompt.assert_not_called()
 
 
