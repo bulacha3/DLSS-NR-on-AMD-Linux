@@ -1,5 +1,5 @@
 {
-  "version": "0.31.1-lmxxf",
+  "version": "0.3.1-lmxxf",
   "mod_version": "0.3.1",
   "files": {},
   "files_note": "Filled by build_release.py from validated build outputs; source checkouts contain no binaries.",

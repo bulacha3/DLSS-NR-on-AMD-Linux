@@ -77,7 +77,7 @@ jobs:
     permissions:
       contents: write
     concurrency:
-      group: release-0.31.1-lmxxf
+      group: release-0.3.1-lmxxf
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
@@ -91,5 +91,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          RELEASE_TAG: v0.31.1-lmxxf
+          RELEASE_TAG: v0.3.1-lmxxf
         run: bash scripts/publish-release.sh

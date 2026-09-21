@@ -1,6 +1,6 @@
 # Release notes
 
-## 0.31.1-lmxxf
+## 0.3.1-lmxxf
 
 ### Changes
 
@@ -12,7 +12,7 @@
 
 ### Performance
 
-| Game | Previous Linux release | 0.31.1-lmxxf | Average FPS change |
+| Game | Previous Linux release | 0.3.1-lmxxf | Average FPS change |
 | --- | ---: | ---: | ---: |
 | Cyberpunk 2077 | 41.16 FPS | 46.61 FPS | +13.2% |
 

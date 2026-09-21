@@ -50,11 +50,11 @@
     "reproducibility": "Deterministic packaging of identical inputs; no cross-toolchain binary identity claim."
   },
   "source_hashes": {
-    ".github/workflows/build-release.yml": "d909c5074816fd9e13f3b083cd0819b261ee08ca71e26eb01fd6d7b21aa73c07",
-    "CHANGELOG.md": "b1c88d837a6a1ac7904ef679e8df5fd67dfca4116dbf15e853556adfc1faac3f",
+    ".github/workflows/build-release.yml": "891dd4bee36136015a0fc00588df28d4911dec282ce22152157be431773b512a",
+    "CHANGELOG.md": "4542ee40317cde742d981aaa2027195bea45b47605666a587b957a0c5fa8b449",
     "README.md": "8360931541422b6d39854e5eb7bbd90d3bd4a100fd3c54cba8ff92423585c17c",
     "THIRD-PARTY.md": "bd1d704bdfbf6ab5fc050dce093b46c6eafce34b3f610f3ec6c582febef50c3e",
-    "assets/manifest.json": "e13e8af1129283d16b900e06cab214273a977fbfe6557e1d08e9c653f300c89a",
+    "assets/manifest.json": "df370f18f816493895b6a4f2fe829465d29727d5bfefd92905546dd539126203",
     "build_release.py": "681514dc17c7d45d0e8edb6ed8b86a907b46ae94c00d68eb8a1e2547cc50b897",
     "dlssnr/assets.py": "be5b29a3079ab6585259a7b34d660b593dbb6bf8b8075387df53b715335a745e",
     "dlssnr/cli.py": "801bf24a3973e8441e70596d7ede3c0acc3ea5684521c45ee79cbfd98e14711f",
@@ -96,9 +96,9 @@
     "tests/test_upstream_031.py": "87359b9eb214c152cad6cee2d9c782e496507519d352d4f9a350ed8496234b97",
     "tests/upstream_recording_contract.c": "94d0a6492a9c320f0d40b147ab261545a48f63c698a17f885fd34a463f27b2cf",
     "tests/vkd3d_ordered_contract.c": "ce0775d5cc175382d6ff5677dbac48bb257533f5197bec6e40151713cc5f1f95",
-    "scripts/publish-release.sh": "49543d1808d13b54866e8047a23812d156fca6c67775219e636dccd88b070ff3"
+    "scripts/publish-release.sh": "a3b6f69a0b5e9d6315ce80cfd6c0f1cd4fbde3c2d35521e30eefa661e911e36f"
   },
-  "installer_version": "0.31.1-lmxxf",
+  "installer_version": "0.3.1-lmxxf",
   "status": "Experimental community implementation; public release.",
   "integration": {
     "hip_exports": 33,

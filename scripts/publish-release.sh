@@ -6,7 +6,12 @@ python3 - <<'PY'
 import json, os, re
 from pathlib import Path
 from urllib.parse import urljoin, urlsplit
-version = json.loads(Path('assets/manifest.json').read_text())['version']
+manifest = json.loads(Path('assets/manifest.json').read_text())
+version = manifest['version']
+if not re.fullmatch(r'\d+\.\d+\.\d+(?:-[A-Za-z0-9.-]+)?', version):
+    raise SystemExit('Invalid release version format')
+if version.split('-', 1)[0] != manifest['mod_version']:
+    raise SystemExit('Release version must retain the upstream mod version')
 assert os.environ['RELEASE_TAG'] == 'v' + version, 'Release/manifest version mismatch'
 notes = Path('CHANGELOG.md').read_text()
 base = f"https://github.com/{os.environ['GH_REPO']}/blob/{os.environ['GITHUB_SHA']}/"
@@ -31,7 +36,7 @@ assert json.load(open(sys.argv[1]))['targetCommitish'] == os.environ['GITHUB_SHA
 PY
 else
     gh release create "$RELEASE_TAG" --draft --prerelease --latest=false \
-        --target "$GITHUB_SHA" --title '0.31.1-lmxxf — Experimental' \
+        --target "$GITHUB_SHA" --title "${RELEASE_TAG#v} — Experimental" \
         --notes-file "$RUNNER_TEMP/dlssnr-release-notes.md"
 fi
 gh release upload "$RELEASE_TAG" \
