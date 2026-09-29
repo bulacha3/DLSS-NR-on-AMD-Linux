@@ -27,7 +27,7 @@ import zipfile
 REQUIRED_SYMBOLS = (
     '__hipRegisterFatBinary', '__hipUnregisterFatBinary', '__hipRegisterFunction',
     '__hipRegisterVar', '__hipPushCallConfiguration', '__hipPopCallConfiguration',
-    'hipGetDeviceCount', 'hipSetDevice', 'hipGetDevicePropertiesR0600',
+    'hipGetDeviceCount', 'hipGetDevice', 'hipOccupancyMaxActiveBlocksPerMultiprocessor', 'hipSetDevice', 'hipGetDevicePropertiesR0600',
     'hipDriverGetVersion', 'hipRuntimeGetVersion', 'hipMalloc', 'hipFree',
     'hipMemcpy', 'hipMemcpyAsync', 'hipMemcpyToSymbol', 'hipMemset',
     'hipMemsetAsync', 'hipLaunchKernel', 'hipDeviceSynchronize',

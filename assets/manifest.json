@@ -1,10 +1,11 @@
 {
-  "version": "0.3.1-lmxxf",
-  "mod_version": "0.3.1",
+  "version": "0.4.3-linux.1",
+  "mod_version": "0.4.3",
   "files": {},
   "files_note": "Filled by build_release.py from validated build outputs; source checkouts contain no binaries.",
   "external_files": {
-    "dlssnr_on_amd_setup.exe": "cf7ada1486b499700a84846b342ca2b1defdb4db622843f812151f255f2ad63c"
+    "dlssnr_on_amd_setup.exe": "186ebe51db8abc4c1884ed7a31148108b139d0c4b35323014b00f90543b5447b",
+    "legacy_weight_converter_0.3.1.exe": "cf7ada1486b499700a84846b342ca2b1defdb4db622843f812151f255f2ad63c"
   },
   "targets": [
     "gfx1100",
@@ -14,19 +15,20 @@
     "gfx1201"
   ],
   "minimum_glibc": "2.34",
-  "hip_bridge_abi": 2,
+  "hip_bridge_abi": 4,
   "ordered_abi": 3,
   "flag_shader_hash": "135ea1f88cbc832d",
-  "runtime_status": "Experimental Daniel 0.3.1 integration; compute is the new-install default; updates preserve the selected synchronization method.",
+  "runtime_status": "Experimental 0.4.3 original upstream backend; bounded Cyberpunk 2077, 007 First Light and Atomic Heart gameplay coverage on gfx1201 in Fast mode. Other devices and Reference mode are not validated.",
   "distribution": "Bridge binaries and corresponding source; upstream runtime downloaded and staged only on the user machine",
   "linux_sync_settings": {
     "Async": "0",
     "SpinDraw": "0",
-    "CpuWait": "0"
+    "CpuWait": "0",
+    "PollSpacing": "0"
   },
   "graphics_wait_supported": true,
   "graphics_wait_shaders": {
-    "pixel": "9b67a44ca79c547f",
+    "pixel": "f2010bee184ea0aa",
     "vertex": "97c89ca9f5ead0f9"
   }
 }

@@ -227,7 +227,7 @@ def _select_wait_method(data, requested=None):
 
 
 def _ini(data, index, *, update=False, wait_method=None):
-    from .upstream import LINUX_SYNC_SETTINGS
+    from .upstream import LINUX_SYNC_SETTINGS, DEFAULT_CONFIG
     wait_method = _select_wait_method(data if update else b'', wait_method)
     try:
         text = data.decode('utf-8')
@@ -267,6 +267,17 @@ def _ini(data, index, *, update=False, wait_method=None):
             seen.add(key)
             suffix_space = match[3][len(match[3].rstrip()):]
             lines[i] = match[1] + values[key] + suffix_space + match[4] + (match[5] or '')
+    # Add upstream defaults only for absent keys in the NR section.
+    # This is not an instruction to overwrite a user's visual settings.
+    present = set()
+    for line in lines[start:end]:
+        match = re.match(r'^\s*([A-Za-z][A-Za-z0-9_]*)\s*=', line)
+        if match:
+            present.add(match[1].casefold())
+    for line in DEFAULT_CONFIG.decode('utf-8').splitlines()[1:]:
+        key, value = line.split('=', 1)
+        if key.casefold() not in present and key not in values:
+            values[key] = value
     additions = [key + '=' + value + newline for key, value in values.items() if key not in seen]
     if additions and end and not lines[end - 1].endswith(('\r', '\n')):
         lines[end - 1] += newline
@@ -496,8 +507,10 @@ def _restore(exe, data):
                          item['original'], item['original_mode'], store / 'stage')
 
 
-def _cleanup(store, *, check_only=False):
-    """Only known owned files; never rmtree or use paths from the journal."""
+def _cleanup(store, *, check_only=False, allow_runtime_logs=False):
+    """Preflight owned files; update-only log tolerance never permits deletion."""
+    if allow_runtime_logs and not check_only:
+        raise ValueError('Runtime logs may only be allowed during read-only update validation')
     _safe(store, directory=True)
     fixed = {'manifest.json', 'launch.sh'}
     subdirs = {'backups', 'stage', 'runtime', 'logs', 'undo'}
@@ -513,6 +526,12 @@ def _cleanup(store, *, check_only=False):
                 allowed = (entry.name in {Path(name).name for name in TARGETS}
                            if child.name in ('backups', 'stage', 'undo') else
                            entry.name in ({BRIDGE} if child.name == 'runtime' else {'hip.log', 'vkd3d.log'}))
+                # Updates leave diagnostics untouched. Legacy profilers and other
+                # runtime tools write regular .txt/.json files here as well as logs.
+                # _safe above still rejects symlinks, subdirectories and devices;
+                # destructive cleanup retains its original exact allowlist.
+                if child.name == 'logs' and allow_runtime_logs:
+                    allowed = True
                 if child.name == 'stage' and entry.name.startswith(('.copy-', '.write-')):
                     allowed = True
                 if not allowed:
@@ -655,7 +674,7 @@ def _recover_update(exe):
 def _update_game(exe, prior, assets, hashes, weights, weight_info, wrapper,
                  cache, request, gpu, dry_run, wait_method):
     store = exe.parent / STORE
-    _cleanup(store, check_only=True)
+    _cleanup(store, check_only=True, allow_runtime_logs=True)
     ini = _bytes(exe.parent / INI)
     payloads = {INI: _ini(ini, gpu['index'], update=True, wait_method=wait_method), STORE + '/launch.sh': wrapper}
     sources = {name: assets / name for name in DLLS}

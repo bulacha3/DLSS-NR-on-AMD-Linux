@@ -164,7 +164,7 @@ static void init(struct fixture *f) {
     f->state.graphics.stages[0].stage=VK_SHADER_STAGE_VERTEX_BIT;
     f->state.graphics.stages[1].stage=VK_SHADER_STAGE_FRAGMENT_BIT;
     f->state.graphics.code[0].meta.hash=UINT64_C(0x97c89ca9f5ead0f9);
-    f->state.graphics.code[1].meta.hash=UINT64_C(0x9b67a44ca79c547f);
+    f->state.graphics.code[1].meta.hash=UINT64_C(0xf2010bee184ea0aa);
     f->list.cmd.iteration_count=1; f->list.cmd.vk_command_buffer=1;
     f->list.cmd.nr_flag_va=0x100100; f->list.cmd.nr_abort_va=0x900000;
     f->list.cmd.nr_graphics_flag_va=0x100100; f->list.cmd.nr_graphics_abort_va=0x900000;

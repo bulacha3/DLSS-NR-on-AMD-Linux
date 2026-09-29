@@ -54,7 +54,7 @@ def parser():
                                  help='Allow installation without static evidence of mod loading; activation remains unverified')
             command.add_argument('--confirm-fsr', action='store_true',
                                  help='Confirm the game offers FSR 3 or FSR 4 when file inspection cannot detect it')
-            command.add_argument('--setup', type=Path, help='Official v0.3.1 setup; otherwise downloaded and verified for installation')
+            command.add_argument('--setup', type=Path, help=f'Official v{upstream.VERSION} setup; otherwise downloaded and verified for installation')
             command.add_argument('--wait-method', choices=('compute', 'graphics'),
                                  help='Advanced override: default compute on new installs; updates keep the saved choice; graphics has a known 007 startup failure')
             command.add_argument('--dry-run', action='store_true', help='No writes, downloads or conversion')
@@ -461,7 +461,7 @@ def candidate_weights(args, interactive):
 def update_existing_candidate(args, exe, interactive):
     # Explicit base changes retain the normal installation path. Otherwise the
     # verified original launcher already contains all runtime/GPU selections.
-    if (args.command != 'install' or args.dry_run or
+    if (upstream.VERSION != '0.3.1' or args.command != 'install' or args.dry_run or
             any(getattr(args, k, None) for k in ('proton', 'gpu', 'hip_library', 'setup', 'wait_method', 'weights'))):
         return None
     saved = lmxxf.existing_runtime(exe)
@@ -617,7 +617,7 @@ def main(argv=None):
         gpu = select_gpu(rt['devices'], args.gpu, interactive)
         if not args.dry_run:
             if not args.json and args.setup is None:
-                print('Downloading and verifying the official v0.3.1 setup (about 8 MB)...')
+                print(f'Downloading and verifying the official v{upstream.VERSION} setup (about {upstream.SETUP_BYTES / 1_000_000:.0f} MB)...')
             package_root = contexts.enter_context(upstream.prepared_package(PACKAGE_ROOT, args.setup))
         weights = args.weights.expanduser() if args.weights else exe.parent / deploy.WEIGHTS
         if not args.weights and not args.nvidia_dll and not weights.is_file():
@@ -702,7 +702,7 @@ def main(argv=None):
                                       'The base installation is valid. Use the base launch command below until preparation succeeds.']
         else:
             result['backend'] = 'original'
-            result['notes'] = [*result.get('notes', []), 'This GPU uses the original backend; the bundled optimized kernels target gfx1201.']
+            result['notes'] = [*result.get('notes', []), f'This release uses the original {upstream.VERSION} network through native Linux HIP. Optional inference optimizations are selected per release.']
         emit(dict(result, exe=exe, gpu=gpu, proton=proton['root'],
                   loader_evidence=evidence.get('loader_evidence', []),
                   fsr_confirmed_by_user=evidence['fsr_confirmed_by_user'],

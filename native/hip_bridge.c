@@ -19,6 +19,7 @@
 #include <errno.h>
 
 /* Keep stubs in g_bridge forever. Real HIP lives in `real`. */
+const char dlssnr_hip_abi_marker[] = "DLSSNR_HIP_ABI_V4";
 static DlssnrHipBridge g_bridge;
 static DlssnrHipBridge real;
 static void *g_hip;
@@ -360,6 +361,17 @@ static int ensure_hip(void) {
     p_hipImportExternalSemaphore = (int (*)(void **, const void *))must_dlsym("hipImportExternalSemaphore");
     p_hipSignalExternalSemaphoresAsync =
         (int (*)(const void *, const void *, unsigned, void *))must_dlsym("hipSignalExternalSemaphoresAsync");
+    real.p_hipGetDevice = must_dlsym("hipGetDevice");
+    real.p_hipOccupancyMaxActiveBlocksPerMultiprocessor =
+        must_dlsym("hipOccupancyMaxActiveBlocksPerMultiprocessor");
+    if (!real.p_hipGetDevice || !real.p_hipOccupancyMaxActiveBlocksPerMultiprocessor)
+        return -1;
+    real.p_hipDeviceGetStreamPriorityRange = must_dlsym("hipDeviceGetStreamPriorityRange");
+    real.p_hipStreamCreateWithPriority = must_dlsym("hipStreamCreateWithPriority");
+    real.p_hipStreamDestroy = must_dlsym("hipStreamDestroy");
+    if (!real.p_hipDeviceGetStreamPriorityRange || !real.p_hipStreamCreateWithPriority
+            || !real.p_hipStreamDestroy)
+        return -1;
     g_hip_ok = 1;
     if (real.p_hipEventCreate)
         real.p_hipEventCreate(&g_done_event);
@@ -660,6 +672,16 @@ static int stub_devcount(int *c) {
     logmsg("hipGetDeviceCount err=%d count=%d", e, c ? *c : -1);
     return e;
 }
+static int stub_getdev(int *device) {
+    if (ensure_hip() || !real.p_hipGetDevice) return 3;
+    return real.p_hipGetDevice(device);
+}
+static int stub_occupancy(int *blocks, const void *function_address,
+        int block_size, u64 dynamic_shared_bytes) {
+    if (ensure_hip() || !real.p_hipOccupancyMaxActiveBlocksPerMultiprocessor) return 3;
+    return real.p_hipOccupancyMaxActiveBlocksPerMultiprocessor(
+        blocks, function_address, block_size, dynamic_shared_bytes);
+}
 static int stub_setdev(int d) {
     if (ensure_hip() || !real.p_hipSetDevice)
         return 3;
@@ -747,14 +769,24 @@ static int stub_launch(const void *f, dim3_t nb, dim3_t db, void **a, u64 sh, vo
         return nr_job.error;
     if (g_k_import && f == g_k_import && !nr_job.active)
         return 3;
-    if (nr_job.active && (st != nr_job.stream || nr_job.sealed))
-        return nr_job_error(1);
+    if (nr_job.active && (e = nr_route_job_launch(f, st))) {
+        logmsg("ordered launch refused token=%llu frame=%u kernel=%p marker=%p work=%p got=%p err=%d",
+               (unsigned long long)nr_job.token, nr_job.frame, f,
+               nr_job.stream, nr_job.work_stream, st, e);
+        return e;
+    }
     if (g_flag_set && f == g_flag_set) {
         e = nr_seal_job(a, st);
         if (e) return e;
-        /* Preserve v0.3.0's completion/abort stores on the original stream.
-         * Complete here, on the owning thread, before upstream can poll its
-         * event elsewhere. This first port deliberately serializes jobs. */
+        /* Keep the original completion/abort stores on the marker stream.
+         * 0.4.1 inference may have used its separate priority stream. Drain it
+         * BEFORE enqueueing the marker; never publish completion or release
+         * pins on just a successful marker-stream sync. No kernels are moved. */
+        if (!real.p_hipStreamSynchronize) return nr_job_error(3);
+        if (nr_job.work_bound && nr_job.work_stream != nr_job.stream) {
+            e = real.p_hipStreamSynchronize(nr_job.work_stream);
+            if (e) return nr_job_error(e);
+        }
         e = real.p_hipLaunchKernel(f, nb, db, a, sh, st);
         if (e) return nr_job_error(e);
         if (!real.p_hipStreamSynchronize) return nr_job_error(3);
@@ -806,10 +838,43 @@ static int stub_streamcreate_flags(void **stream, unsigned int flags) {
     if (ensure_hip() || !real.p_hipStreamCreateWithFlags) return 3;
     return real.p_hipStreamCreateWithFlags(stream, flags);
 }
+/* Preserve HIP's real range, signed priority, handle and error codes. Priority
+ * availability/scheduling is the runtime's responsibility, never faked here. */
+static int stub_priority_range(int *least, int *greatest) {
+    if (ensure_hip() || !real.p_hipDeviceGetStreamPriorityRange) return 3;
+    int result = real.p_hipDeviceGetStreamPriorityRange(least, greatest);
+    if (!result && least && greatest)
+        logmsg("priority range least=%d greatest=%d", *least, *greatest);
+    else if (result) logmsg("priority range failed err=%d", result);
+    return result;
+}
+static int stub_streamcreate_priority(void **stream, unsigned int flags, int priority) {
+    if (ensure_hip() || !real.p_hipStreamCreateWithPriority) return 3;
+    int result = real.p_hipStreamCreateWithPriority(stream, flags, priority);
+    logmsg("priority stream flags=%u requested=%d err=%d", flags, priority, result);
+    return result;
+}
+static int stub_streamdestroy(void *stream) {
+    if (ensure_hip() || !real.p_hipStreamDestroy) return 3;
+    /* No invented synchronization or completion: forward the lifecycle API. */
+    int result = real.p_hipStreamDestroy(stream);
+    logmsg("stream destroy err=%d", result);
+    return result;
+}
 static int stub_streamsync(void *stream) {
     if (ensure_hip() || !real.p_hipStreamSynchronize) return 3;
     int result = real.p_hipStreamSynchronize(stream);
-    return nr_job.active && nr_job.stream == stream ? nr_complete_job(result) : result;
+    if (!nr_job.active || (nr_job.stream != stream &&
+            (!nr_job.work_bound || nr_job.work_stream != stream))) return result;
+    if (result) return nr_job_error(result);
+    /* A recovery sync of only one queue cannot release a failed two-queue job.
+     * Normal intermediate syncs stay intermediate and do not publish output. */
+    if ((nr_job.error || nr_job.sealed) && nr_job.work_bound &&
+            nr_job.work_stream != nr_job.stream) {
+        void *other = stream == nr_job.stream ? nr_job.work_stream : nr_job.stream;
+        result = real.p_hipStreamSynchronize(other);
+    }
+    return nr_complete_job(result);
 }
 static int stub_evrec(void *e, void *st) {
     if (ensure_hip() || !real.p_hipEventRecord)
@@ -874,6 +939,8 @@ __attribute__((constructor)) static void dlssnr_hip_init(void) {
     g_bridge.p___hipPopCallConfiguration = stub_pop;
     g_bridge.p_hipGetDeviceCount = stub_devcount;
     g_bridge.p_hipSetDevice = stub_setdev;
+    g_bridge.p_hipGetDevice = stub_getdev;
+    g_bridge.p_hipOccupancyMaxActiveBlocksPerMultiprocessor = stub_occupancy;
     g_bridge.p_hipGetDevicePropertiesR0600 = stub_props;
     g_bridge.p_hipDriverGetVersion = stub_drvver;
     g_bridge.p_hipRuntimeGetVersion = stub_rtver;
@@ -892,6 +959,9 @@ __attribute__((constructor)) static void dlssnr_hip_init(void) {
     g_bridge.p_hipEventCreateWithFlags = stub_evcreate_flags;
     g_bridge.p_hipEventQuery = stub_evquery;
     g_bridge.p_hipStreamCreateWithFlags = stub_streamcreate_flags;
+    g_bridge.p_hipDeviceGetStreamPriorityRange = stub_priority_range;
+    g_bridge.p_hipStreamCreateWithPriority = stub_streamcreate_priority;
+    g_bridge.p_hipStreamDestroy = stub_streamdestroy;
     g_bridge.p_hipStreamSynchronize = stub_streamsync;
     g_bridge.p_hipEventRecord = stub_evrec;
     g_bridge.p_hipEventSynchronize = stub_evsync;

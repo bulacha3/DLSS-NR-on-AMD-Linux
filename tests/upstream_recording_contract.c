@@ -11,9 +11,125 @@
 #include <unistd.h>
 
 #define MS __attribute__((ms_abi))
-#define IMAGE_SIZE 0xa0000
+#define IMAGE_SIZE 0xc0000
+/* Both reviewed routines share the same COM contract with PollSpacing=0. */
+#ifdef DLSSNR_RECORD_043
+#define ENTRY 0x19cf0
+#define CONST_A 0x7f510
+#define CONST_B 0x7f528
+#define EXEC_PAGE 0x19000
+static unsigned global_rva(unsigned old) {
+    switch (old) {
+    case 0x09aa90: return 0xb1718;
+    case 0x09ab28: return 0xb17c0;
+    case 0x09aa88: return 0xb1710;
+    case 0x09aa89: return 0xb1711;
+    case 0x09aa68: return 0xb16f0;
+    case 0x09aac0: return 0xb1748;
+    case 0x09a948: return 0xb15b8;
+    case 0x09a950: return 0xb15c0;
+    case 0x09a930: return 0xb15a0;
+    case 0x09a940: return 0xb15b0;
+    case 0x09aae0: return 0xb1768;
+    case 0x09aa8c: return 0xb1714;
+    case 0x09ab14: return 0xb179c;
+    case 0x09ab20: return 0xb17b8;
+    case 0x09ab18: return 0xb17b0;
+    case 0x06cd40: return 0x7f510;
+    case 0x06cd58: return 0x7f528;
+    default: abort();
+    }
+}
+#elif defined(DLSSNR_RECORD_042)
+#define ENTRY 0x19540
+#define CONST_A 0x7e310
+#define CONST_B 0x7e328
+#define EXEC_PAGE 0x19000
+static unsigned global_rva(unsigned old) {
+    switch (old) {
+    case 0x09aa90: return 0xaf5a0;
+    case 0x09ab28: return 0xaf648;
+    case 0x09aa88: return 0xaf598;
+    case 0x09aa89: return 0xaf599;
+    case 0x09aa68: return 0xaf578;
+    case 0x09aac0: return 0xaf5d0;
+    case 0x09a948: return 0xaf440;
+    case 0x09a950: return 0xaf448;
+    case 0x09a930: return 0xaf428;
+    case 0x09a940: return 0xaf438;
+    case 0x09aae0: return 0xaf5f0;
+    case 0x09aa8c: return 0xaf59c;
+    case 0x09ab14: return 0xaf624;
+    case 0x09ab20: return 0xaf640;
+    case 0x09ab18: return 0xaf638;
+    case 0x06cd40: return 0x7e310;
+    case 0x06cd58: return 0x7e328;
+    default: abort();
+    }
+}
+#elif defined(DLSSNR_RECORD_041)
+#define ENTRY 0x19120
+#define CONST_A 0x791d0
+#define CONST_B 0x791e8
+#define EXEC_PAGE 0x19000
+static unsigned global_rva(unsigned old) {
+    switch (old) {
+    case 0x09aa90: return 0xaa3d0;
+    case 0x09ab28: return 0xaa470;
+    case 0x09aa88: return 0xaa3c8;
+    case 0x09aa89: return 0xaa3c9;
+    case 0x09aa68: return 0xaa3a8;
+    case 0x09aac0: return 0xaa400;
+    case 0x09a948: return 0xaa270;
+    case 0x09a950: return 0xaa278;
+    case 0x09a930: return 0xaa258;
+    case 0x09a940: return 0xaa268;
+    case 0x09aae0: return 0xaa420;
+    case 0x09aa8c: return 0xaa3cc;
+    case 0x09ab14: return 0xaa454;
+    case 0x09ab20: return 0xaa468;
+    case 0x09ab18: return 0xaa460;
+    case 0x06cd40: return 0x791d0;
+    case 0x06cd58: return 0x791e8;
+    default: abort();
+    }
+}
+#elif defined(DLSSNR_RECORD_040)
+#define ENTRY 0x19130
+#define CONST_A 0x781e0
+#define CONST_B 0x781f8
+#define EXEC_PAGE 0x19000
+static unsigned global_rva(unsigned old) {
+    switch (old) {
+    case 0x09aa90: return 0x0a8398;
+    case 0x09ab28: return 0x0a8438;
+    case 0x09aa88: return 0x0a8390;
+    case 0x09aa89: return 0x0a8391;
+    case 0x09aa68: return 0x0a8370;
+    case 0x09aac0: return 0x0a83c8;
+    case 0x09a948: return 0x0a8238;
+    case 0x09a950: return 0x0a8240;
+    case 0x09a930: return 0x0a8220;
+    case 0x09a940: return 0x0a8230;
+    case 0x09aae0: return 0x0a83e8;
+    case 0x09aa8c: return 0x0a8394;
+    case 0x09ab14: return 0x0a841c;
+    case 0x09ab20: return 0x0a8430;
+    case 0x09ab18: return 0x0a8428;
+    case 0x06cd40: return 0x0781e0;
+    case 0x06cd58: return 0x0781f8;
+    default: abort();
+    }
+}
+#else
 #define ENTRY 0x17980
-#define CODE_SIZE (0x180a6 - ENTRY)
+#define CONST_A 0x6cd40
+#define CONST_B 0x6cd58
+#define EXEC_PAGE 0x17000
+static unsigned global_rva(unsigned old) { return old; }
+#endif
+#define CODE_SIZE 0x726
+
 static unsigned char *image;
 static struct fixture active;
 static struct pipeline_state draw_state;
@@ -85,8 +201,8 @@ static void MS predication(struct object *self, struct object *buffer,
     predications++;
 }
 
-static void u32(unsigned rva, uint32_t value) { memcpy(image+rva, &value, 4); }
-static void ptr(unsigned rva, void *value) { memcpy(image+rva, &value, 8); }
+static void u32(unsigned rva, uint32_t value) { memcpy(image+global_rva(rva), &value, 4); }
+static void ptr(unsigned rva, void *value) { memcpy(image+global_rva(rva), &value, 8); }
 static void scenario(unsigned use_predication, unsigned target_slices,
                      unsigned spin_budget, unsigned expected_slices,
                      unsigned graphics, unsigned have_pipeline) {
@@ -94,7 +210,7 @@ static void scenario(unsigned use_predication, unsigned target_slices,
     draw_state=active.state; draw_state.graphics_mode=true;
     memset(counts, 0, sizeof(counts)); predications = 0;
     memset(image+0x9a000, 0, IMAGE_SIZE-0x9a000);
-    image[0x9aa88] = use_predication;
+    image[global_rva(0x9aa88)] = use_predication;
     u32(0x9aa90, 8192);
     u32(0x9ab28, target_slices);
     u32(0x9aa8c, 1); /* PredWait=1 */
@@ -123,11 +239,11 @@ int main(int argc, char **argv) {
                  MAP_ANONYMOUS|MAP_PRIVATE, -1, 0);
     assert(image != MAP_FAILED);
     assert(fread(image+ENTRY, 1, CODE_SIZE, file) == CODE_SIZE);
-    assert(fread(image+0x6cd40, 1, 16, file) == 16);
-    assert(fread(image+0x6cd58, 1, 16, file) == 16);
+    assert(fread(image+CONST_A, 1, 16, file) == 16);
+    assert(fread(image+CONST_B, 1, 16, file) == 16);
     assert(fgetc(file) == EOF); fclose(file);
     /* Only the reviewed recording routine pages are executable. */
-    assert(!mprotect(image+0x17000, 0x2000, PROT_READ|PROT_EXEC));
+    assert(!mprotect(image+EXEC_PAGE, 0x2000, PROT_READ|PROT_EXEC));
     resource_vtable[0x58/8] = gpu_va;
     flags = (struct object){resource_vtable, 0x100000};
     abort_word = (struct object){resource_vtable, 0x900000};
@@ -162,6 +278,6 @@ int main(int argc, char **argv) {
     scenario(1, 64, 20000000, 64, 1, 1);
     scenario(1, 4000, 32768000, 4000, 1, 1);
     assert(!munmap(image, IMAGE_SIZE));
-    puts("Original 0.3.1 compute and graphics recorder accepted by Linux bridge: 1/64/4000 waits, producer/finalizer retained, compute fallbacks checked (CPU mocks only)");
+    puts("Pinned upstream compute and graphics recorder accepted by Linux bridge: 1/64/4000 waits, producer/finalizer retained, compute fallbacks checked (CPU mocks only)");
     return 0;
 }

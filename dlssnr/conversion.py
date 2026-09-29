@@ -39,6 +39,8 @@ def _shutdown(server, env):
 
 def convert_weights(package_root, nvidia_dll, proton, cache_root):
     from .deploy import _safe, _atomic_copy, _atomic_bytes
+    from . import legacy_converter
+    import urllib.request
     source=Path(nvidia_dll).expanduser().resolve()
     if not source.is_file():raise RuntimeError(f'NVIDIA DLL not found: {source}')
     if sha256(source)!=KNOWN_NVIDIA_SHA:
@@ -66,8 +68,13 @@ def convert_weights(package_root, nvidia_dll, proton, cache_root):
         try:
             # Copy, not link, so an upstream write cannot alter the original.
             shutil.copy2(source,folder/'nvngx_dlssnr.dll')
-            for name in ('dlssnr_on_amd_setup.exe','amdhip64_7.dll'):
-                shutil.copy2(root/'assets'/name,folder/name)
+            # The new setup is graphical. Use the separately pinned legacy
+            # extractor only in this disposable directory, not in the game.
+            with urllib.request.urlopen(legacy_converter.SETUP_URL, timeout=60) as response:
+                converter = response.read(legacy_converter.SETUP_BYTES + 1)
+            legacy_converter.inspect_setup(converter)
+            (folder/'dlssnr_on_amd_setup.exe').write_bytes(converter)
+            shutil.copy2(root/'assets'/'amdhip64_7.dll', folder/'amdhip64_7.dll')
             # Raw Proton prefixes may have an unusable builtin DXGI/wined3d chain.
             # Use the already validated distribution's DXVK, private to conversion.
             if proton.get('dxgi'):
@@ -111,7 +118,8 @@ def convert_weights(package_root, nvidia_dll, proton, cache_root):
             # Never touch a legacy weights.tmp (which may point outside the cache).
             _atomic_copy(generated, output, details['sha256'])
             _atomic_bytes(cache/'conversion.json', json.dumps({'input_sha256':KNOWN_NVIDIA_SHA,
-                    'weights':details,'source':'local conversion via original setup v' + manifest.get('mod_version', 'unknown')},indent=2).encode())
+                    'weights':details,'source':'local conversion via pinned legacy setup v' + legacy_converter.VERSION,
+                    'converter_sha256':legacy_converter.SETUP_SHA256},indent=2).encode())
         finally:
             if safe_to_remove:
                 shutil.rmtree(folder)

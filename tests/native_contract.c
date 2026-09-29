@@ -7,6 +7,22 @@ static u64 allocation_size;
 static void *test_stream = (void *)0x1234;
 static int retain(uint64_t owner) { assert(owner == 77); ++references; return 0; }
 static void release(uint64_t owner) { assert(owner == 77); --references; }
+static int query_device(int *out) { *out=7; return 19; }
+static int query_occupancy(int *blocks, const void *fn, int size, u64 shared) {
+    assert(fn==(const void *)0x12345678 && size==256 && shared==UINT64_C(0x123456789));
+    *blocks=5; return 23;
+}
+static void added_040_queries(void) {
+    int value=-1;
+    real.p_hipGetDevice=query_device;
+    assert(stub_getdev(&value)==19 && value==7);
+    real.p_hipOccupancyMaxActiveBlocksPerMultiprocessor=query_occupancy;
+    assert(stub_occupancy(&value,(const void *)0x12345678,256,UINT64_C(0x123456789))==23 && value==5);
+    real.p_hipGetDevice=NULL;
+    real.p_hipOccupancyMaxActiveBlocksPerMultiprocessor=NULL;
+    assert(stub_getdev(&value)==3 && value==5);
+    assert(stub_occupancy(&value,(const void *)0x12345678,256,0)==3 && value==5);
+}
 static int create_event(void **out, unsigned flags) {
     assert(flags == 2); *out = (void *)0x4567; return 19;
 }
@@ -85,6 +101,7 @@ static void job(uint32_t frame, uint64_t token, void *flags, struct nr_buffer *s
 int main(void) {
     _Static_assert(sizeof(u64) == 8, "Win64 and Unix sizes must agree");
     g_hip_ok = 1;
+    added_040_queries();
     real.p_hipEventCreateWithFlags = create_event;
     real.p_hipEventQuery = query_event;
     real.p_hipStreamCreateWithFlags = create_stream;

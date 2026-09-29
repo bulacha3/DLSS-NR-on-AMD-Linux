@@ -149,6 +149,20 @@ EXPORT int hipGetDeviceCount(int *count) {
     return ((int SYSV (*)(int *))g->p_hipGetDeviceCount)(count);
 }
 
+EXPORT int hipGetDevice(int *device) {
+    if (!bridge_ok() || !g->p_hipGetDevice) return HIP_ERROR_NOT_INITIALIZED;
+    return ((int SYSV (*)(int *))g->p_hipGetDevice)(device);
+}
+
+EXPORT int hipOccupancyMaxActiveBlocksPerMultiprocessor(int *blocks,
+        const void *function_address, int block_size, u64 dynamic_shared_bytes) {
+    if (!bridge_ok() || !g->p_hipOccupancyMaxActiveBlocksPerMultiprocessor)
+        return HIP_ERROR_NOT_INITIALIZED;
+    return ((int SYSV (*)(int *, const void *, int, u64))
+        g->p_hipOccupancyMaxActiveBlocksPerMultiprocessor)(
+        blocks, function_address, block_size, dynamic_shared_bytes);
+}
+
 EXPORT int hipSetDevice(int device) {
     if (!bridge_ok() || !g->p_hipSetDevice)
         return HIP_ERROR_NOT_INITIALIZED;
@@ -266,6 +280,21 @@ EXPORT int hipEventQuery(void *event) {
 EXPORT int hipStreamCreateWithFlags(void **stream, unsigned int flags) {
     if (!bridge_ok() || !g->p_hipStreamCreateWithFlags) return HIP_ERROR_NOT_INITIALIZED;
     return ((int SYSV (*)(void **, unsigned int))g->p_hipStreamCreateWithFlags)(stream, flags);
+}
+
+EXPORT int hipDeviceGetStreamPriorityRange(int *least, int *greatest) {
+    if (!bridge_ok() || !g->p_hipDeviceGetStreamPriorityRange) return HIP_ERROR_NOT_INITIALIZED;
+    return ((int SYSV (*)(int *, int *))g->p_hipDeviceGetStreamPriorityRange)(least, greatest);
+}
+
+EXPORT int hipStreamCreateWithPriority(void **stream, unsigned int flags, int priority) {
+    if (!bridge_ok() || !g->p_hipStreamCreateWithPriority) return HIP_ERROR_NOT_INITIALIZED;
+    return ((int SYSV (*)(void **, unsigned int, int))g->p_hipStreamCreateWithPriority)(stream, flags, priority);
+}
+
+EXPORT int hipStreamDestroy(void *stream) {
+    if (!bridge_ok() || !g->p_hipStreamDestroy) return HIP_ERROR_NOT_INITIALIZED;
+    return ((int SYSV (*)(void *))g->p_hipStreamDestroy)(stream);
 }
 
 EXPORT int hipStreamSynchronize(void *stream) {

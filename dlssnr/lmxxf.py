@@ -20,7 +20,7 @@ import sysconfig
 import tempfile
 import urllib.request
 
-from . import assets, conversion, deploy
+from . import assets, conversion, deploy, upstream
 
 CONVERTER_HASHES = {
     'convert_weights.py': '8517a9d5592e2000b18522bf79a2480df5a78512514177a4ee4df3998f0597d3',
@@ -31,7 +31,7 @@ CONVERTER_HASHES = {
 
 
 def supported(gpu):
-    return gpu.get('arch', '').split(':', 1)[0] == 'gfx1201'
+    return upstream.VERSION == '0.3.1' and gpu.get('arch', '').split(':', 1)[0] == 'gfx1201'
 
 
 def backend(package_root):
@@ -178,7 +178,10 @@ def numpy_python(cache_root, *, quiet=False):
 
 def launch_options(package_root, cache_root, exe, supplied=None, *, interactive=False,
                    original_backend=False):
-    api, _ = backend(package_root)
+    if original_backend:
+        from . import launch_support as api
+    else:
+        api, _ = backend(package_root)
     wrapper = Path(exe).parent/deploy.STORE/'launch.sh'
     base, entry = api.installation_paths(wrapper, cache_base(cache_root))
     saved = None

@@ -38,7 +38,7 @@ def require_deployable(manifest):
     from .upstream import COMPONENTS, FLAG_SHADER_HASH, VERSION, LINUX_SYNC_SETTINGS, GRAPHICS_WAIT_HASHES
     if set(COMPONENTS) - set(manifest.get('files', {})):
         raise RuntimeError('Release components are missing. Build them or use the experimental archive from a successful CI run.')
-    if (manifest.get('mod_version') != VERSION or manifest.get('hip_bridge_abi') != 2
+    if (manifest.get('mod_version') != VERSION or manifest.get('hip_bridge_abi') != 4
             or manifest.get('ordered_abi') != 3
             or manifest.get('flag_shader_hash') != FLAG_SHADER_HASH
             or manifest.get('linux_sync_settings') != LINUX_SYNC_SETTINGS

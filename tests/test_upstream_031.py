@@ -7,7 +7,7 @@ import subprocess
 import tempfile
 import unittest
 
-from dlssnr import assets, deploy, upstream
+from dlssnr import assets, deploy, upstream, legacy_converter
 from dlssnr.games import pe_info
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -65,11 +65,11 @@ class LinuxSyncConfigurationTests(unittest.TestCase):
         self.assertIn(b'SpinDraw=1', deploy._ini(invalid, 0, update=True, wait_method='graphics'))
 
 
-@unittest.skipUnless(os.environ.get('DLSSNR_TEST_SETUP'), 'official 0.3.1 fixture not supplied')
+@unittest.skipUnless(os.environ.get('DLSSNR_TEST_SETUP_031'), 'official 0.3.1 fixture not supplied')
 class OfficialPayloadTests(unittest.TestCase):
     def payload(self):
-        data = upstream.read_setup(os.environ['DLSSNR_TEST_SETUP'])
-        return upstream.inspect_setup(data)[0]
+        data = legacy_converter.read_setup(os.environ['DLSSNR_TEST_SETUP_031'])
+        return legacy_converter.inspect_setup(data)[0]
 
     def test_delay_loaded_hip_imports_match_the_trampoline_contract(self):
         payload = self.payload()
@@ -97,7 +97,7 @@ class OfficialPayloadTests(unittest.TestCase):
             while (thunk := struct.unpack_from('<Q', payload, pos)[0]):
                 self.assertLess(thunk, 1 << 63)  # named, not ordinal-only
                 found.add(name(thunk+2)); pos += 8
-        self.assertEqual(found, upstream.HIP_IMPORTS)
+        self.assertEqual(found, legacy_converter.HIP_IMPORTS)
 
     @unittest.skipUnless(os.environ.get('DLSSNR_TEST_VKD3D_SOURCE'), 'patched vkd3d source not supplied')
     def test_actual_upstream_compute_and_graphics_recorder_with_the_bridge(self):

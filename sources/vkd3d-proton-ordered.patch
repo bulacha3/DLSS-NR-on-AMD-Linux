@@ -787,12 +787,12 @@ index 00000000..4b485178
 +        return false;
 +    if (graphics)
 +    {
-+        /* Exact original 0.3.1 shaders only; never intercept game draws. */
++        /* Exact original 0.4.0 shaders only; never intercept game draws. */
 +        for (i = 0; i < list->state->graphics.stage_count; ++i)
 +        {
 +            uint64_t stage_hash = list->state->graphics.code[i].meta.hash;
 +            if (list->state->graphics.stages[i].stage == VK_SHADER_STAGE_FRAGMENT_BIT &&
-+                    stage_hash == UINT64_C(0x9b67a44ca79c547f))
++                    stage_hash == UINT64_C(0xf2010bee184ea0aa))
 +                pixel = true;
 +            if (list->state->graphics.stages[i].stage == VK_SHADER_STAGE_VERTEX_BIT &&
 +                    stage_hash == UINT64_C(0x97c89ca9f5ead0f9))

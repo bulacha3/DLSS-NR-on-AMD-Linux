@@ -1,5 +1,25 @@
 # Release notes
 
+## 0.4.3
+
+Update to the original upstream 0.4.3 runtime, retaining the Linux priority-stream
+bridge and full guided installer. Includes Fast/Reference settings, configurable
+overlay key and the upstream overlay/settings fixes. Updates preserve existing
+models, visual choices and original-file backups.
+
+Optional lmxxf optimizations are selected per release when they provide a verified benefit. Version 0.4.3 uses the original upstream inference backend.
+
+Current gameplay checks cover Cyberpunk 2077, 007 First Light and Atomic Heart
+on RX 9070 XT in Fast mode. Cyberpunk benchmark averages: 55.22 FPS Quality and
+64.87 FPS Balanced, with frame generation enabled; see the full notes for settings.
+Intermittent processing spikes remain unresolved. No Linux FPS percentage is claimed.
+
+[Full 0.4.3 notes](docs/releases/0.4.3.md) · [Installation](docs/INSTALL.md)
+
+## Previous releases
+
+The following entry describes the previously published release, not 0.4.3.
+
 ## 0.3.1-lmxxf
 
 ### Changes

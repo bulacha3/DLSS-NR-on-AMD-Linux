@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify the original v0.3.1 setup without executing or changing it."""
+"""Verify the original v0.4.0 setup without executing or changing it."""
 import argparse
 import json
 from pathlib import Path

@@ -1,32 +1,29 @@
-# Source origins and notices
+# Third-party components and provenance
 
-- Linux installer and bridge: guentra/DLSS-NR-on-AMD-Linux. The original native
-  and trampoline sources were recovered from its published experimental
-  archive, identified by SHA-256 in PROVENANCE.json. Their original notices
-  are retained. This repository does not assert a new license grant for that
-  author's code.
-- vkd3d-proton: HansKristian-Work/vkd3d-proton at the pinned commit recorded in
-  PROVENANCE.json. Its LGPL notices, copying terms, authors, dependency notices,
-  complete local patch and submodule pins accompany the build.
-- DLSS-NR on AMD v0.3.1: danielblnc/DLSS-NR-on-AMD. The official setup is fetched
-  and verified during local installation and CI checks. Its setup and
-  embedded runtime are used without changing their bytes and are excluded from
-  Git and portable packages. See the upstream repository for its license and
-  original notices.
-- NVIDIA DLL and converted weights: supplied by the user; never bundled.
-- AMD HIP/ROCm: external runtime, not included in the portable archive.
-- LLVM/MinGW: a separately downloaded, hash-verified build toolchain. Its
-  source and third-party terms are provided by mstorsjo/llvm-mingw.
+- **Linux port and bridge:** [guentra/DLSS-NR-on-AMD-Linux](https://github.com/guentra/DLSS-NR-on-AMD-Linux).
+  Original native/trampoline sources and notices are retained, with the source
+  archive identified in `PROVENANCE.json`. No new license grant for that author's
+  code is asserted here.
+- **vkd3d-proton:** [HansKristian-Work/vkd3d-proton](https://github.com/HansKristian-Work/vkd3d-proton),
+  pinned in `PROVENANCE.json`. Its license, copying terms, authors, dependency
+  notices, complete local patch and submodule pins accompany the build.
+- **DLSS-NR on AMD:** [danielblnc/DLSS-NR-on-AMD](https://github.com/danielblnc/DLSS-NR-on-AMD).
+  The 0.4.3 runtime and separate 0.3.1 headless weight converter are downloaded
+  and verified locally, without modifying their bytes. Neither setup nor
+  embedded runtime is redistributed in this package. See upstream for its terms.
+- **lmxxf:** [lmxxf/dlss5-on-amd-9070xt-porting](https://github.com/lmxxf/dlss5-on-amd-9070xt-porting).
+  Credited for optional backend work used in previous releases. The original
+  MIT notice is retained in `licenses/LMXXF-MIT.txt`; 0.4.3 does not bundle or
+  activate the alternative inference modules. Launcher migration support is
+  retained for users updating from earlier integrations.
+- **NVIDIA model DLL and converted weights:** supplied by the user, never bundled.
+- **AMD HIP/ROCm:** external runtime/compiler libraries, not bundled.
+- **LLVM/MinGW:** separately downloaded, checksum-verified build toolchain;
+  original source and third-party terms are supplied by mstorsjo/llvm-mingw.
+- **NumPy:** used by legacy model-preparation helpers when applicable; not bundled.
+  Separately installed wheels retain their original notices.
 
-- lmxxf HIP backend: pinned sources and selective backports are recorded in
-  `experiments/lmxxf/stage4/runtime/build.json`. Compiled GPU modules and the
-  Linux integration source are included. The upstream MIT notice is retained
-  in `experiments/lmxxf/LICENSE.upstream`. Model data is prepared locally from
-  the user's DLL and is never bundled.
-- NumPy: used for local model preparation. When needed, the installer downloads
-  a hash-verified official wheel into a private environment. NumPy and its
-  dependency notices accompany that wheel; it is not bundled here.
-
-New standalone integration helpers and tests are covered by
-licenses/PROJECT-MIT.txt. That notice does not replace the licenses or missing
-grants of third-party components.
+New standalone integration helpers and tests use `licenses/PROJECT-MIT.txt`.
+That notice does not replace third-party licenses or missing grants.
+Component attribution and rebuild sources remain part of the distribution;
+removing personal diagnostics does not remove these notices.

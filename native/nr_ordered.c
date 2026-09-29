@@ -48,8 +48,9 @@ static struct nr_pin_bundle *nr_pin_bundles;
 static _Thread_local struct {
     uint64_t token;
     uint32_t frame;
-    void *stream, *flags;
-    int active, error, sealed;
+    void *stream, *flags; /* Original marker stream; never silently replaced. */
+    void *work_stream;
+    int active, error, sealed, work_bound;
     struct nr_frame_state *state;
 } nr_job;
 
@@ -458,6 +459,35 @@ static int nr_job_error(int error) {
     if (nr_job.token) nr_fail(nr_job.token, nr_job.frame, error);
     return error;
 }
+/* 0.4.1 deliberately submits wait/set markers on the legacy null stream,
+ * while k_import, inference and k_export use the engine's priority stream.
+ * Bind exactly one work stream at the first registered import. This is NOT
+ * permission for arbitrary per-kernel stream switching. Evidence and regression
+ * fixture: docs/research/upstream-041-stream-fix.md.
+ */
+static int nr_route_job_launch(const void *f, void *stream) {
+    if (nr_job.sealed) return nr_job_error(1);
+    if (f == g_flag_set)
+        return stream == nr_job.stream ? 0 : nr_job_error(1);
+    if (nr_job.work_bound)
+        return stream == nr_job.work_stream ? 0 : nr_job_error(1);
+    if (f != g_k_import)
+        return stream == nr_job.stream ? 0 : nr_job_error(1);
+    /* Only the reviewed null-marker -> explicit-work transition is supported.
+     * Drain the marker queue before launching work on another queue, so any
+     * preceding marker-side initialization cannot race the first input read. */
+    if (stream != nr_job.stream) {
+        if (nr_job.stream) return nr_job_error(1);
+        if (!real.p_hipStreamSynchronize) return nr_job_error(3);
+        int error = real.p_hipStreamSynchronize(nr_job.stream);
+        if (error) return nr_job_error(error);
+    }
+    nr_job.work_stream = stream;
+    nr_job.work_bound = 1;
+    nr_trace("work-stream-bound", nr_job.token, nr_job.frame, 0);
+    return 0;
+}
+
 static int nr_seal_job(void **args, void *stream) {
     void *flags = NULL;
     uint32_t frame = 0;

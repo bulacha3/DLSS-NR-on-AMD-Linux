@@ -1,12 +1,15 @@
 # Atomic Heart
 
+> **0.4.3 coverage:** startup, gameplay and Quality/Balanced switching checked on RX 9070 XT through Proton, using DLSS-NR Fast and FSR 3.1.4 through OptiScaler. This is a configuration-specific check, not a guarantee for every system.
+
 Use `AtomicHeart/Binaries/Win64/AtomicHeart-Win64-Shipping.exe` and the
 **OptiScaler** route in the installer. Select **DLSS in the game** and an
 **FSR 3/4 backend in OptiScaler**.
 
 If this route already works, keep its launch options. For a fresh setup, install
 [OptiScaler](https://github.com/optiscaler/OptiScaler) or use a Proton runner
-that provides it. A starting Steam profile for runners with OptiScaler integration is:
+that provides it. The following historical example is specific to runners with OptiScaler integration;
+it has not been revalidated for 0.4.3. Prefer the options already working for your game:
 
 ```text
 DLSSNR_SWAPCHAIN_QUEUE=1 PROTON_USE_OPTISCALER=1 PROTON_OPTISCALER_NAME=dxgi.dll PROTON_OPTISCALER_CONFIG="Inputs.EnableFfxInputs=false;Upscalers.Dx12Upscaler=fsr31;FSR.UpscalerIndex=0;FSR.Fsr4Update=false;Menu.OverlayMenu=true;Menu.FGShortcutKey=-1;FrameGen.Enabled=false;FrameGen.FGInput=nofg;Spoofing.Dxgi=true" PROTON_FSR4_UPGRADE=0 %command% -dx12
@@ -17,6 +20,6 @@ current options when asked, and copy its complete final line into Steam. The
 installer adds the DLSS-NR launcher; the profile above alone does not install NR.
 
 This profile uses `Spoofing.Dxgi=true`; the 007 profile uses false. **Insert**
-opens OptiScaler; **End** opens DLSS-NR. Ray tracing remains a game setting.
+opens OptiScaler; **End** opens DLSS-NR by default (configurable with `OverlayKey`). Ray tracing remains a game setting.
 
 [Installation guide](../INSTALL.md) · [Troubleshooting](../TROUBLESHOOTING.md)
