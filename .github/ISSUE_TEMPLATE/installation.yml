@@ -1,0 +1,41 @@
+name: Installation problem
+description: Installer stopped, missing mod folder or invalid launch command
+title: "[Installation] "
+body:
+  - type: markdown
+    attributes:
+      value: "The hidden .dlssnr-linux folder is created beside the selected game executable by ./install.sh, not by the Steam command. Press Ctrl+H to show hidden folders. Do not create it manually. Redact personal paths before sharing."
+  - type: input
+    id: system
+    attributes:
+      label: Linux distribution and version
+      placeholder: "Linux Mint 22.2 / SteamOS version / CachyOS"
+    validations:
+      required: true
+  - type: input
+    id: gpu
+    attributes:
+      label: GPU model
+    validations:
+      required: true
+  - type: input
+    id: game
+    attributes:
+      label: Game and launcher
+      placeholder: "Game name; Steam native/Flatpak, Lutris, Heroic, other"
+    validations:
+      required: true
+  - type: input
+    id: package
+    attributes:
+      label: Downloaded package and version
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Exact command and terminal error
+      description: "Copy the last terminal lines and failing stage; do not include tokens, passwords or model weights."
+      render: text
+    validations:
+      required: true

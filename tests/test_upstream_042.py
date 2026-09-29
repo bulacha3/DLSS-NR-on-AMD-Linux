@@ -3,7 +3,7 @@ import unittest
 from dlssnr import deploy,upstream
 class Quality042(unittest.TestCase):
  def test_pins_and_default(self):
-  self.assertEqual(upstream.VERSION,'0.4.3')
+  self.assertEqual(upstream.VERSION,'0.5.0')
   self.assertIn(b'Quality=fast\n',upstream.DEFAULT_CONFIG)
  def test_missing_quality_added_without_resetting_visuals(self):
   for newline in ('\n','\r\n'):

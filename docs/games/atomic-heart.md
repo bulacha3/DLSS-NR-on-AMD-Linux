@@ -1,6 +1,6 @@
 # Atomic Heart
 
-> **0.4.3 coverage:** startup, gameplay and Quality/Balanced switching checked on RX 9070 XT through Proton, using DLSS-NR Fast and FSR 3.1.4 through OptiScaler. This is a configuration-specific check, not a guarantee for every system.
+> See [release coverage and limitations](../releases/0.5.0.md#coverage-and-limitations) for tested versions and hardware. A profile is not a compatibility guarantee.
 
 Use `AtomicHeart/Binaries/Win64/AtomicHeart-Win64-Shipping.exe` and the
 **OptiScaler** route in the installer. Select **DLSS in the game** and an
@@ -9,7 +9,7 @@ Use `AtomicHeart/Binaries/Win64/AtomicHeart-Win64-Shipping.exe` and the
 If this route already works, keep its launch options. For a fresh setup, install
 [OptiScaler](https://github.com/optiscaler/OptiScaler) or use a Proton runner
 that provides it. The following historical example is specific to runners with OptiScaler integration;
-it has not been revalidated for 0.4.3. Prefer the options already working for your game:
+it is not a universal preset. Prefer the options already working for your game:
 
 ```text
 DLSSNR_SWAPCHAIN_QUEUE=1 PROTON_USE_OPTISCALER=1 PROTON_OPTISCALER_NAME=dxgi.dll PROTON_OPTISCALER_CONFIG="Inputs.EnableFfxInputs=false;Upscalers.Dx12Upscaler=fsr31;FSR.UpscalerIndex=0;FSR.Fsr4Update=false;Menu.OverlayMenu=true;Menu.FGShortcutKey=-1;FrameGen.Enabled=false;FrameGen.FGInput=nofg;Spoofing.Dxgi=true" PROTON_FSR4_UPGRADE=0 %command% -dx12

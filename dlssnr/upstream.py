@@ -1,4 +1,4 @@
-"""Verify the official v0.4.3 setup and stage unmodified runtime files locally."""
+"""Verify the official v0.5.0 setup and stage unmodified runtime files locally."""
 from contextlib import contextmanager
 import hashlib
 import json
@@ -7,15 +7,15 @@ import struct
 import tempfile
 import urllib.request
 
-VERSION = '0.4.3'
-SETUP_URL = 'https://github.com/danielblnc/DLSS-NR-on-AMD/releases/download/v0.4.3/dlssnr_on_amd_setup.exe'
-SETUP_BYTES = 15910400
-SETUP_SHA256 = '186ebe51db8abc4c1884ed7a31148108b139d0c4b35323014b00f90543b5447b'
-PAYLOAD_SHA256 = 'd1e320862a8763ac39e7ce194536d4b6c55ba61bae9e8a92753cec32df67a457'
-PAYLOAD_OFFSET = 2496343
-PAYLOAD_BYTES = 12749824
+VERSION = '0.5.0'
+SETUP_URL = 'https://github.com/danielblnc/DLSS-NR-on-AMD/releases/download/v0.5.0/dlssnr_on_amd_setup.exe'
+SETUP_BYTES = 41864192
+SETUP_SHA256 = '39df94a0c94b8194135cb2f85aedcc9225a7a62a66fb8adee600729fceab145e'
+PAYLOAD_SHA256 = 'cddfb09e019347957bf7b96c95c0e900e8d3062dfaed697a8a96b0a039aec31a'
+PAYLOAD_OFFSET = 2496351
+PAYLOAD_BYTES = 38703616
 DEFAULT_CONFIG = b'[DlssNrOnAmd]\nEnabled=1\nLocalTone=0\nLocalStructure=1\nSkinStructure=-1\nStyle=0\nUseAutoMask=1\nToneChannels=0\nQuality=fast\nOverlayKey=End\nScale=0.03125\nTemporal=1\nTonemap=-1\nToneCurve=reinhard\nToneLift=0\nUseGameExposure=1\nUseFsrInputs=1\nUseDepth=1\nInterop=1\nPreUpscale=1\nPreHistory=0\nAsync=0\nInlineWaitMs=200\nHipDevice=-1\n'
-FLAG_SHADER_OFFSET = 505792
+FLAG_SHADER_OFFSET = 522656
 FLAG_SHADER_BYTES = 1472
 FLAG_SHADER_SHA256 = '0b85aab8db0ee8ba14019e32e3839bb2d321cde974371b30eb3742955b53084b'
 FLAG_SHADER_HASH = '135ea1f88cbc832d'
@@ -24,8 +24,8 @@ FLAG_SHADER_HASH = '135ea1f88cbc832d'
 DEFAULT_WAIT_METHOD = 'compute'
 LINUX_SYNC_SETTINGS = {'Async': '0', 'SpinDraw': '0', 'CpuWait': '0', 'PollSpacing': '0'}
 GRAPHICS_WAIT_SHADERS = {
-    'pixel': (507264, 1152, 'd16612a9715be13134b209612f599e4a7fc76d406a7142d8bdca67d8e55327cf', 'f2010bee184ea0aa'),
-    'vertex': (508416, 616, '6526515bce0be56016c40a78c54497f852d7bcf1c9237acbe759b36ad2cd2944', '97c89ca9f5ead0f9'),
+    'pixel': (524128, 1152, 'd16612a9715be13134b209612f599e4a7fc76d406a7142d8bdca67d8e55327cf', 'f2010bee184ea0aa'),
+    'vertex': (525280, 616, '6526515bce0be56016c40a78c54497f852d7bcf1c9237acbe759b36ad2cd2944', '97c89ca9f5ead0f9'),
 }
 GRAPHICS_WAIT_HASHES = {name: values[3] for name, values in GRAPHICS_WAIT_SHADERS.items()}
 COMPONENTS = ('amdhip64_7.dll', 'd3d12.dll', 'd3d12core.dll', 'libdlssnr_hip_bridge.so')
@@ -108,7 +108,7 @@ def prepared_package(package_root, setup=None):
     else:
         data = read_setup(setup)
     payload, config, report = inspect_setup(data)
-    with tempfile.TemporaryDirectory(prefix='dlssnr-v043-') as temporary:
+    with tempfile.TemporaryDirectory(prefix='dlssnr-v050-') as temporary:
         prepared = Path(temporary)
         assets = prepared / 'assets'
         assets.mkdir()

@@ -89,7 +89,10 @@ def select_gpu(devices, requested, interactive):
     if len(supported) == 1:
         return supported[0]
     if not supported:
-        raise RuntimeError('Unsupported GPU. Bundled targets: ' + ', '.join(sorted(TARGETS)))
+        raise RuntimeError('No supported GPU found for this Linux integration. Detected: ' +
+                           ', '.join(str(d.get('name', '?')) + ' (' + str(d.get('arch', '?')) + ')' for d in devices) +
+                           '. Supported architecture IDs: ' + ', '.join(sorted(TARGETS)) +
+                           '. SteamOS support does not imply support for every Steam Deck/handheld GPU. Nothing installed.')
     if interactive:
         return choose(supported, 'GPU', lambda d: f"HIP {d['index']}: {d['name']} ({d['arch']})")
     raise RuntimeError('Multiple compatible GPUs; select one explicitly with --gpu INDEX.')
@@ -179,7 +182,7 @@ def guided_upscaler(args, evidence):
         '3': 'Not sure / not configured yet'})
     if choice == '3':
         print('Check the game settings for FSR 3/4, or configure OptiScaler using the game setup guide.')
-        print('Game setup guides: https://github.com/bulacha3/DLSS-NR-on-AMD-Linux#tested-games')
+        print('Game setup guides: https://github.com/bulacha3/DLSS-NR-on-AMD-Linux#game-profiles-and-current-coverage')
         raise InstallerCancelled('Confirm a supported upscaler route before installing.')
     args.confirm_fsr = True
     args._upscaler_route = 'native' if choice == '1' else 'optiscaler'
@@ -416,11 +419,18 @@ def emit(result, args):
         print('Game:', result['exe'])
     if result.get('proton'):
         print('Use this Wine/Proton runner in your launcher:', result['proton'])
+    if result.get('exe'):
+        folder = Path(result['exe']).parent / deploy.STORE
+        print('Mod folder (hidden):', folder)
+        if result.get('valid') and not result.get('dry_run'):
+            print('This folder was created by the installer. Use Ctrl+H to show hidden files.')
+            print('The Steam launch command starts the installed mod; it does not install it.')
+    launch_ready = result.get('installed') and result.get('valid') and not result.get('pending') and not result.get('dry_run')
     launcher = getattr(args, 'launcher', None)
-    if result.get('launch_options') and launcher != 'other':
+    if launch_ready and result.get('launch_options') and launcher != 'other':
         print('\nSteam > Properties > General > Launch Options: replace that field with this complete line:')
         print(result['launch_options'])
-    if result.get('command_prefix') and launcher != 'steam':
+    if launch_ready and result.get('command_prefix') and launcher != 'steam':
         print('\nIn your launcher, set this command prefix and keep the current runner, environment and game arguments:')
         print(result['command_prefix'])
         print('Do not add Steam\'s %command% token to this command prefix.')
@@ -496,6 +506,7 @@ def main(argv=None):
     args = parser().parse_args(arguments or ['install'])
     interactive = sys.stdin.isatty() and not args.json
     args._guided = interactive and args.command == 'install' and not args.dry_run
+    args._phase = 'package verification'
     contexts = ExitStack()
     package_root = PACKAGE_ROOT
     try:
@@ -538,6 +549,7 @@ def main(argv=None):
                 rt = runtime.probe_runtime(rt['library'], self_test=True)
             emit(rt, args)
             return 0
+        args._phase = 'game selection'
         if args._guided:
             guided_game(args)
         if getattr(args, 'launcher', None) == 'other' and getattr(args, 'launch_options', None) is not None:
@@ -557,6 +569,7 @@ def main(argv=None):
             return 0
         if manifest is None:
             manifest = assets.verify_assets(PACKAGE_ROOT)
+        args._phase = 'system and game checks'
         host = check_host(manifest)
         evidence = games.inspect_game(exe)
         if evidence['anti_cheat_evidence']:
@@ -572,9 +585,11 @@ def main(argv=None):
             print('Game executable:', exe)
             print('\n3/5 — Wine/Proton runner')
             print('Keep the runner already used by your launcher. This setup does not change the launcher\'s selection.')
+        args._phase = 'Wine/Proton selection'
         proton = resolve_proton(args, interactive)
         if args.command == 'install':
             proton = confirm_runner(args, proton, interactive)
+        args._phase = 'upscaler and loader checks'
         if args._guided:
             guided_upscaler(args, evidence)
         fsr_warnings = []
@@ -613,12 +628,15 @@ def main(argv=None):
         require(args.accept_risk, interactive, 'Experimental injection may crash, render incorrectly or trigger anti-cheat. Continue?', '--accept-risk')
         if deploy.running_game(exe):
             raise RuntimeError('Close the game before installation.')
+        args._phase = 'HIP runtime and GPU checks'
         rt = readonly_runtime(args) if args.dry_run else ensure_runtime(args, interactive)
         gpu = select_gpu(rt['devices'], args.gpu, interactive)
+        args._phase = 'upstream download and verification'
         if not args.dry_run:
             if not args.json and args.setup is None:
                 print(f'Downloading and verifying the official v{upstream.VERSION} setup (about {upstream.SETUP_BYTES / 1_000_000:.0f} MB)...')
             package_root = contexts.enter_context(upstream.prepared_package(PACKAGE_ROOT, args.setup))
+        args._phase = 'model data preparation'
         weights = args.weights.expanduser() if args.weights else exe.parent / deploy.WEIGHTS
         if not args.weights and not args.nvidia_dll and not weights.is_file():
             cached = data_dir(args)/'weights'/conversion.KNOWN_NVIDIA_SHA/deploy.WEIGHTS
@@ -675,6 +693,10 @@ def main(argv=None):
                                                       original_backend=prepared is None)
         elif args._guided:
             print('\n5/5 — Launcher configuration\nThe final launch instructions will be printed after installation.')
+        args._phase = 'game file installation'
+        if not args.json:
+            print('Installing beside:', exe)
+            print('Mod folder (hidden):', exe.parent / deploy.STORE)
         conflicts = [name for name in deploy.DLLS if (exe.parent / name).exists()]
         replace = args.replace_existing
         if conflicts and not replace and not (exe.parent / deploy.STORE).exists():
@@ -683,6 +705,8 @@ def main(argv=None):
         result = deploy.install_game(exe, package_root, rt, gpu, proton, weights,
                                      acknowledge_risk=True, replace_existing=replace, dry_run=args.dry_run,
                                      wait_method=args.wait_method)
+        if not result.get('installed') or not result.get('valid') or result.get('pending'):
+            raise RuntimeError('Installation verification did not succeed. ' + '; '.join(result.get('notes', [])))
         if prepared is None and args.launch_options is not None:
             result['launch_options'] = args.launch_options
         candidate_failed = False
@@ -713,7 +737,10 @@ def main(argv=None):
         print(f'Cancelled: {exc}')
         return 130
     except (RuntimeError, OSError, ValueError, subprocess.SubprocessError) as exc:
-        print(f'Error: {exc}', file=sys.stderr)
+        print(f'Error during {args._phase}: {exc}', file=sys.stderr)
+        if args.command == 'install':
+            print('Installation was NOT confirmed. Keep this terminal error; do not use a launch command from this failed run.', file=sys.stderr)
+            print('Do not create .dlssnr-linux manually or run the installer with sudo. Existing installation/backups may still be present.', file=sys.stderr)
         return 2
     except (EOFError, KeyboardInterrupt):
         print('Cancelled. Run status before your next operation.', file=sys.stderr)

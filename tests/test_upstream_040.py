@@ -79,10 +79,10 @@ class Official040Tests(unittest.TestCase):
         def at(rva,size):return payload[pe.mapped(rva,size):pe.mapped(rva,size)+size]
         with tempfile.TemporaryDirectory() as tmp:
             tmp=Path(tmp);code=tmp/'recording.bin'
-            code.write_bytes(at(0x19cf0,0x726)+at(0x7f510,16)+at(0x7f528,16))
+            code.write_bytes(at(0x19b90,0x726)+at(0x834f0,16)+at(0x83508,16))
             binary=tmp/'recording-contract'
             include=Path(os.environ['DLSSNR_TEST_VKD3D_SOURCE']).resolve()/'libs/vkd3d'
-            subprocess.run(['gcc','-std=gnu11','-O1','-g','-DDLSSNR_RECORD_043',
+            subprocess.run(['gcc','-std=gnu11','-O1','-g','-DDLSSNR_RECORD_050',
                 '-fsanitize=address,undefined','-fno-omit-frame-pointer','-I',str(include),
                 str(ROOT/'tests/upstream_recording_contract.c'),'-o',str(binary)],check=True,timeout=60)
             result=subprocess.run([str(binary),str(code)],check=True,capture_output=True,

@@ -31,7 +31,7 @@ PACKAGE_FILES = (
     'licenses/PROJECT-MIT.txt', 'licenses/vkd3d-proton-LICENSE',
     'licenses/vkd3d-proton-COPYING', 'licenses/vkd3d-proton-AUTHORS',
     'licenses/vkd3d-dependency-notices.txt',
-    'licenses/LMXXF-MIT.txt', 'docs/releases/0.4.3.md',
+    'licenses/LMXXF-MIT.txt', 'docs/releases/0.4.3.md', 'docs/releases/0.5.0.md',
 )
 
 

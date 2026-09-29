@@ -1,5 +1,27 @@
 # Troubleshooting
 
+## Mod folder is missing
+
+The folder is **`.dlssnr-linux`**, created by **`./install.sh`**, beside the actual
+Windows game executable. The leading dot makes it hidden; use **Ctrl+H** or
+**Show Hidden Files** in your file manager. For Cyberpunk, look in
+`bin/x64/.dlssnr-linux`, not the game's top-level directory.
+[Locations for the game profiles](INSTALL.md#where-the-mod-is-installed).
+The Steam launch-options line only starts the installed mod and does not create it.
+
+Do not create an empty folder, use `sudo`, or reuse another game's launch line.
+When installation stops, keep the terminal error and its stage. Report your
+Linux distribution/version, GPU, game, Steam native/Flatpak or other launcher,
+the exact command, and the last terminal lines (redact personal paths).
+A read-only check from the portable folder is:
+
+```sh
+./install.sh status --exe '/path/to/the/actual/Game.exe'
+```
+
+This does not install anything and does not launch the game or probe HIP.
+[Distribution prerequisites](INSTALL.md#distribution-prerequisites).
+
 ## FSR is inactive in the DLSS-NR menu
 
 Check the game's upscaler against its setup guide. For the OptiScaler profiles,
@@ -29,8 +51,8 @@ startup failure. With the game closed, run from the portable package directory:
 ./install.sh install --exe '/path/to/007 First Light/Retail/007FirstLight.exe' --wait-method compute
 ```
 
-New installations use compute by default. This historical workaround does not
-constitute 0.4.3 gameplay validation for 007.
+New installations use compute by default. Check the release notes for the
+versions and hardware covered by gameplay checks.
 
 ## Intermittent processing spikes
 
@@ -65,4 +87,4 @@ launcher settings. No personal logs are included in the downloadable package.
 Logs generated on your computer may contain paths and hardware identifiers;
 review and redact them before sharing. `DLSSNR_DIAGNOSTICS=0` disables extra bridge tracing.
 
-[Installation](INSTALL.md) · [Current coverage](releases/0.4.3.md#coverage-and-limitations)
+[Installation](INSTALL.md) · [Current coverage](releases/0.5.0.md#coverage-and-limitations)

@@ -32,6 +32,46 @@ the game directory. The installer locates or asks for the actual executable.
    complete final command as described below. Existing models are reused; if
    needed, the installer asks for your supported NVIDIA model DLL or converted weights.
 
+## Where the mod is installed
+
+`./install.sh` creates **`.dlssnr-linux` beside the selected game executable**,
+not necessarily in the game library's top-level folder. It is hidden: press
+**Ctrl+H** in your file manager, or enable **Show Hidden Files** in its menu.
+The leading dot makes the directory hidden. For Cyberpunk the full relative path
+is `bin/x64/.dlssnr-linux`; for the 007 profile it is `Retail/.dlssnr-linux`; for
+Atomic Heart it is beside the selected shipping executable. The installer prints
+the exact destination for your selection.
+
+The **Steam launch command does not install or create the mod folder**. Copy it
+only after the installer reports success. Do not create `.dlssnr-linux` manually:
+an empty directory has no verified manifest, launcher, bridge or backups.
+If setup stops, retain the terminal output from the error and the named stage.
+Use the full ZIP, not a copied `launch.sh`, `run.sh`, or GitHub source archive.
+
+## Distribution prerequisites
+
+Use the same user that owns the game and a writable game library. This installer
+does not require a writable system partition or change system packages.
+
+- **Linux Mint / Ubuntu:** Python **3.10+** is accepted by the original backend.
+  A user-local HIP installation additionally needs the matching Python `venv` and
+  `ensurepip` modules (normally supplied by `python3-venv` on these distributions).
+  The check runs before downloading the AMD wheel. Do not replace the system
+  Python or run this installer with `sudo`.
+- **SteamOS:** run the installer in **Desktop Mode**, using a terminal. Keep the
+  system read-only; do not run `steamos-readonly disable` for this mod. A working
+  HIP 7 runtime, KFD access and a supported GPU are still required. Linux targets
+  remain `gfx1100`, `gfx1101`, `gfx1102`, `gfx1200`, and `gfx1201`; this does not
+  add Steam Deck/RDNA2 or handheld APU support.
+- **Steam Flatpak:** detecting its game library does not establish sandbox access
+  to the game, HIP runtime and `/dev/kfd`/render devices. Check those permissions;
+  `STEAM_COMPAT_MOUNTS` alone cannot override the outer Flatpak sandbox.
+
+CPU/installer tests do not establish gameplay compatibility on these systems.
+If an error mentions a missing device, unsupported architecture, read-only path,
+or unavailable Python module, fix that prerequisite instead of creating an empty
+mod folder or changing driver/library names.
+
 ## Steam
 
 Open **Library → right-click the game → Properties → General → Launch Options**.
@@ -56,12 +96,13 @@ Provide your own supported `nvngx_dlssnr.dll` **310.8.0.0**, or an existing
 `DLSSNRW1` converted weights file. Ordinary DLSS upscaling DLLs are not interchangeable
 with the required model. The installer verifies the input before converting it.
 
-Existing model data is reused. Fresh conversion uses the separately pinned
-upstream 0.3.1 headless converter in a temporary directory; it is not installed
-as the game's runtime. The game receives **0.4.3**. Fresh extraction has not been
-revalidated end-to-end for this release; existing weights have gameplay coverage.
+Existing model data is reused. Fresh conversion uses a separately pinned
+headless converter in a temporary directory; that converter is not installed as
+the game's runtime. The game receives the runtime specified by the chosen package.
+See [release coverage](releases/0.5.0.md#coverage-and-limitations) for extraction
+checks and [source provenance](../PROVENANCE.json) for exact component versions.
 
-The original 0.4.3 setup is downloaded and checksum-verified during installation.
+The package's pinned original setup is downloaded and checksum-verified during installation.
 HIP is checked locally; a verified user-local HIP download may be offered when
 needed. NVIDIA files, weights and AMD runtime/compiler libraries are not bundled.
 

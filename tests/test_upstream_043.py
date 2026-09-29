@@ -3,7 +3,7 @@ import unittest
 from dlssnr import deploy,upstream
 class Overlay043(unittest.TestCase):
  def test_version_and_new_default(self):
-  self.assertEqual(upstream.VERSION,'0.4.3')
+  self.assertEqual(upstream.VERSION,'0.5.0')
   self.assertIn(b'OverlayKey=End\n',upstream.DEFAULT_CONFIG)
  def test_existing_key_is_preserved(self):
   for value in ('End','F11','Home','Insert'):

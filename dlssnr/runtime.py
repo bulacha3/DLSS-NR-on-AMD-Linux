@@ -296,6 +296,27 @@ def _wheel_metadata(wheel: Path) -> dict:
         return {'name': metadata['Name'], 'version': metadata['Version'], 'requires_dist': requires}
 
 
+def _check_venv_support():
+    """Read-only check before downloading; never install system packages."""
+    try:
+        process = subprocess.run([sys.executable, '-I', '-c', 'import venv, ensurepip'],
+                                 capture_output=True, text=True, timeout=15)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise RuntimeError('Cannot check Python venv support; no AMD wheel downloaded: ' + str(exc)) from exc
+    if process.returncode:
+        try:
+            system = platform.freedesktop_os_release()
+        except OSError:
+            system = {}
+        if system.get('ID') in ('linuxmint', 'ubuntu', 'debian'):
+            advice = 'Install the matching python3-venv package using your distribution package manager.'
+        else:
+            advice = ('Use a Python interpreter with venv and ensurepip available. On SteamOS, keep the system '
+                      'read-only; do not disable its protection or install packages with pacman just to bypass this check.')
+        raise RuntimeError('Python venv/ensurepip is unavailable. ' + advice +
+                           ' No AMD wheel downloaded and no game files changed.')
+
+
 def _install_wheel(cache_root: Path) -> dict:
     from .deploy import _safe
     cache_root = _safe(Path(cache_root).expanduser(), directory=True, missing=True)
@@ -326,6 +347,7 @@ def _install_wheel(cache_root: Path) -> dict:
             raise RuntimeError('Another runtime installation is in progress') from exc
         with tempfile.TemporaryDirectory(prefix='wheel-', dir=cache_root) as temporary:
             wheel = Path(temporary)/WHEEL_URL.rsplit('/', 1)[1]
+            _check_venv_support()
             digest = _download_wheel(wheel)
             metadata = _wheel_metadata(wheel)
             target.mkdir(exist_ok=True)

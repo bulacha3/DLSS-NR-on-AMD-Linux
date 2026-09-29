@@ -13,7 +13,34 @@
 #define MS __attribute__((ms_abi))
 #define IMAGE_SIZE 0xc0000
 /* Both reviewed routines share the same COM contract with PollSpacing=0. */
-#ifdef DLSSNR_RECORD_043
+#ifdef DLSSNR_RECORD_050
+#define ENTRY 0x19b90
+#define CONST_A 0x834f0
+#define CONST_B 0x83508
+#define EXEC_PAGE 0x19000
+static unsigned global_rva(unsigned old) {
+    switch (old) {
+    case 0x09aa90: return 0xb6750;
+    case 0x09ab28: return 0xb67f8;
+    case 0x09aa88: return 0xb6748;
+    case 0x09aa89: return 0xb6749;
+    case 0x09aa68: return 0xb6728;
+    case 0x09aac0: return 0xb6780;
+    case 0x09a948: return 0xb65f0;
+    case 0x09a950: return 0xb65f8;
+    case 0x09a930: return 0xb65d8;
+    case 0x09a940: return 0xb65e8;
+    case 0x09aae0: return 0xb67a0;
+    case 0x09aa8c: return 0xb674c;
+    case 0x09ab14: return 0xb67d4;
+    case 0x09ab20: return 0xb67f0;
+    case 0x09ab18: return 0xb67e8;
+    case 0x06cd40: return 0x834f0;
+    case 0x06cd58: return 0x83508;
+    default: abort();
+    }
+}
+#elif defined(DLSSNR_RECORD_043)
 #define ENTRY 0x19cf0
 #define CONST_A 0x7f510
 #define CONST_B 0x7f528

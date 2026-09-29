@@ -4,16 +4,13 @@ Experimental DLSS-NR integration for DirectX 12 games on Linux through Wine/Prot
 Based on [danielblnc's DLSS-NR on AMD](https://github.com/danielblnc/DLSS-NR-on-AMD)
 and [guentra's Linux port](https://github.com/guentra/DLSS-NR-on-AMD-Linux).
 
-**0.4.3:** original upstream inference with the Linux priority-stream bridge,
-Fast/Reference settings and a configurable overlay key.
-
 ## Download
 
 Get **`dlssnr-linux-portable.zip`** and **`dlssnr-linux-portable.zip.sha256`**
 from the [release assets](https://github.com/bulacha3/DLSS-NR-on-AMD-Linux/releases).
 GitHub's automatic **Source code** archives are for developers, not the prebuilt installer.
 
-[0.4.3 release notes](docs/releases/0.4.3.md) · [Changelog](CHANGELOG.md)
+[Release notes](docs/releases/0.5.0.md) · [Changelog](CHANGELOG.md)
 
 ## Install or update
 
@@ -36,23 +33,29 @@ For Steam, copy the **complete final line** into **Properties → General → La
 For another launcher, use the printed command prefix. The installer preserves
 the launch arguments you supply; it does not install or configure OptiScaler.
 
+**The installer creates the hidden `.dlssnr-linux` folder beside the selected game
+executable before printing the final command.** Press **Ctrl+H** to see it. The
+Steam command only launches an existing installation; it does not create one.
+If installation stops, keep the terminal error and do not create the folder manually.
+[Find the mod folder](docs/INSTALL.md#where-the-mod-is-installed) ·
+[Missing-folder troubleshooting](docs/TROUBLESHOOTING.md#mod-folder-is-missing).
+
 Updates retain model data, visual settings and original-file backups. Install
 separately for each game; do not mix individual DLLs between releases.
 [Complete step-by-step guide](docs/INSTALL.md).
 
 ## Game profiles and current coverage
 
-| Game | Upscaler route | 0.4.3 coverage |
-| --- | --- | --- |
-| [Cyberpunk 2077](docs/games/cyberpunk-2077.md) | Native FSR | Startup, gameplay, overlay and Quality/Balanced change checked on RX 9070 XT |
-| [007 First Light](docs/games/007-first-light.md) | DLSS input → OptiScaler → FSR | Startup, gameplay and Quality/Balanced switching checked on RX 9070 XT |
-| [Atomic Heart](docs/games/atomic-heart.md) | DLSS input → OptiScaler → FSR | Startup, gameplay and Quality/Balanced switching checked on RX 9070 XT |
+| Game | Upscaler route |
+| --- | --- |
+| [Cyberpunk 2077](docs/games/cyberpunk-2077.md) | Native FSR |
+| [007 First Light](docs/games/007-first-light.md) | DLSS input → OptiScaler → FSR |
+| [Atomic Heart](docs/games/atomic-heart.md) | DLSS input → OptiScaler → FSR |
 
-All three checked games used **DLSS-NR Fast**. Cyberpunk used native **FSR 4.1.1**
-and frame generation; 007 used FSR 4.1.1 through OptiScaler, and Atomic Heart used
-FSR 3.1.4 through OptiScaler. This does not establish compatibility for every game,
-GPU, runner or display configuration. Intermittent processing spikes remain
-unresolved; see the [coverage and limitations](docs/releases/0.4.3.md#coverage-and-limitations).
+A setup guide is not a guarantee of compatibility with every release, GPU,
+runner or display configuration. Check the [release coverage and limitations](docs/releases/0.5.0.md#coverage-and-limitations)
+for the tested version, settings and hardware. Intermittent processing spikes
+remain a known limitation.
 
 ## Settings
 
@@ -66,17 +69,20 @@ This mod adds neural rendering, not path tracing.
 
 ## Optional optimizations
 
-Optional lmxxf optimizations are selected per release when they provide a verified benefit. Version 0.4.3 uses the original upstream inference backend.
+Optional optimizations are included only when they provide a verified benefit.
 
 ## Requirements
 
-Linux x86_64, glibc 2.34+, Python 3.11+, a compatible AMD GPU and HIP 7, and an
-FSR 3/4 path (native or through OptiScaler). Current-release gameplay checks cover RX 9070 XT only. The installer checks an existing HIP runtime and can
-prepare a verified user-local runtime when needed and authorized.
+See [distribution prerequisites](docs/INSTALL.md#distribution-prerequisites).
+SteamOS on supported PC hardware and Steam Deck GPU support are separate questions.
+
+Linux x86_64, glibc 2.34+, Python 3.10+, a compatible AMD GPU and HIP 7, and an
+FSR 3/4 path (native or through OptiScaler). The installer checks an existing HIP
+runtime and can prepare a verified user-local runtime when needed and authorized.
+Hardware coverage is documented in the release notes.
 
 NVIDIA files, model weights and AMD runtime/compiler libraries are not bundled.
-Fresh model extraction has not been revalidated end-to-end in this release;
-existing converted weights were used for the current gameplay check.
+See the release notes for model-extraction and gameplay validation coverage.
 
 ## Remove or troubleshoot
 

@@ -1,10 +1,10 @@
 {
-  "version": "0.4.3-linux.1",
-  "mod_version": "0.4.3",
+  "version": "0.5.0",
+  "mod_version": "0.5.0",
   "files": {},
   "files_note": "Filled by build_release.py from validated build outputs; source checkouts contain no binaries.",
   "external_files": {
-    "dlssnr_on_amd_setup.exe": "186ebe51db8abc4c1884ed7a31148108b139d0c4b35323014b00f90543b5447b",
+    "dlssnr_on_amd_setup.exe": "39df94a0c94b8194135cb2f85aedcc9225a7a62a66fb8adee600729fceab145e",
     "legacy_weight_converter_0.3.1.exe": "cf7ada1486b499700a84846b342ca2b1defdb4db622843f812151f255f2ad63c"
   },
   "targets": [
@@ -18,7 +18,7 @@
   "hip_bridge_abi": 4,
   "ordered_abi": 3,
   "flag_shader_hash": "135ea1f88cbc832d",
-  "runtime_status": "Experimental 0.4.3 original upstream backend; bounded Cyberpunk 2077, 007 First Light and Atomic Heart gameplay coverage on gfx1201 in Fast mode. Other devices and Reference mode are not validated.",
+  "runtime_status": "Experimental Linux release: original upstream 0.5.0. Startup, gameplay and Quality/Balanced transitions checked in Cyberpunk 2077, 007 First Light and Atomic Heart on RX 9070 XT with Fast arithmetic. See release notes for limits.",
   "distribution": "Bridge binaries and corresponding source; upstream runtime downloaded and staged only on the user machine",
   "linux_sync_settings": {
     "Async": "0",

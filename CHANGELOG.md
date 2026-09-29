@@ -1,5 +1,20 @@
 # Release notes
 
+## 0.5.0 — Linux / Proton
+
+- Stage upstream 0.5.0 using pinned bytes, checksum and embedded payload bounds.
+- Preserve the existing Linux bridge and optional-backend policy.
+- Accept Python 3.10 for the original installer path.
+- Clarify the hidden per-executable mod folder and install-versus-launch sequence.
+- Report the failing stage and never offer a launch command for an invalid install.
+- Check venv prerequisites before the optional HIP wheel download.
+- Validate startup, gameplay and Quality/Balanced switching in Cyberpunk 2077,
+  007 First Light and Atomic Heart on RX 9070 XT, with Fast arithmetic.
+- Record Cyberpunk single-run benchmark changes (+1.27% Quality, +1.54% Balanced)
+  and separately labeled gameplay minimum/maximum changes for the other games.
+- Keep intermittent processing spikes and untested conditions explicit.
+
+
 ## 0.4.3
 
 Update to the original upstream 0.4.3 runtime, retaining the Linux priority-stream
